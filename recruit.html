@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cornerstone Council Recruitment CRM</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#000;--p1:#0a0a0a;--p2:#111;--p3:#181818;
+  --g:#c9a84c;--g2:#f0d080;--g3:#8a6e30;--g4:rgba(201,168,76,0.11);
+  --b:rgba(201,168,76,0.2);--b2:rgba(201,168,76,0.4);
+  --t:#e8dfc8;--d:#6a6050;--d2:#9a8f7a;
+  --red:#c0392b;--grn:#27ae60;
+}
+body{background:var(--bg);color:var(--t);font-family:'Georgia',serif;font-size:14px;min-height:100vh}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;background:#050505;border-bottom:1px solid var(--b);position:sticky;top:0;z-index:50;gap:10px;flex-wrap:wrap}
+.nav-logo{font-size:11px;color:var(--g);letter-spacing:1px;font-weight:700;text-transform:uppercase;line-height:1.4;white-space:nowrap}
+.nav-tabs{display:flex;gap:3px;flex-wrap:wrap}
+.nt{padding:6px 12px;border-radius:6px;border:1px solid transparent;background:transparent;color:var(--d2);font-size:11px;cursor:pointer;font-family:'Georgia',serif;transition:all .2s;letter-spacing:.3px}
+.nt.active{background:var(--g4);border-color:var(--b);color:var(--g)}
+.nt:hover:not(.active){color:var(--t)}
+.nav-right{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.tool-btn{padding:5px 11px;border-radius:5px;border:1px solid var(--g3);background:var(--g4);color:var(--g);font-size:11px;font-family:'Georgia',serif;cursor:pointer;letter-spacing:.5px;white-space:nowrap}
+.tool-btn:hover{background:rgba(201,168,76,.2)}
+.tool-btn:disabled{opacity:.35;cursor:not-allowed}
+.view{display:none;padding:18px;max-width:920px;margin:0 auto}
+.view.active{display:block}
+.card{background:var(--p1);border:1px solid var(--b);border-radius:10px;padding:16px;margin-bottom:14px}
+.ct{font-size:10px;color:var(--g3);letter-spacing:1.8px;text-transform:uppercase;margin-bottom:12px}
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.fg label{font-size:10px;color:var(--d2);letter-spacing:.5px;text-transform:uppercase}
+.fg input,.fg select,.fg textarea{background:var(--p2);border:1px solid var(--b);border-radius:7px;padding:9px 12px;color:var(--t);font-size:13px;font-family:'Georgia',serif;outline:none;transition:border-color .2s;width:100%}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--g)}
+.fg select option{background:var(--p2)}
+.fr2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{padding:9px 18px;border-radius:7px;border:1px solid var(--g3);background:var(--g4);color:var(--g);font-size:12px;font-family:'Georgia',serif;cursor:pointer;transition:all .2s;letter-spacing:.3px}
+.btn:hover{background:rgba(201,168,76,.22);border-color:var(--g)}
+.btn.pri{background:var(--g);color:#000;font-weight:700;border-color:var(--g)}
+.btn.pri:hover{background:var(--g2)}
+.btn.dan{border-color:rgba(192,57,43,.4);background:rgba(192,57,43,.08);color:#e57373}
+.btn.dan:hover{background:rgba(192,57,43,.2)}
+.btn.sm{padding:5px 11px;font-size:11px}
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;border:1px solid;white-space:nowrap}
+.bg{background:rgba(201,168,76,.12);color:var(--g);border-color:var(--b)}
+.bp{background:rgba(123,94,167,.12);color:#b39ddb;border-color:rgba(123,94,167,.3)}
+.bb{background:rgba(90,143,163,.12);color:#80cbc4;border-color:rgba(90,143,163,.3)}
+.bv{background:rgba(39,174,96,.12);color:#81c784;border-color:rgba(39,174,96,.3)}
+.bk{background:rgba(120,120,120,.12);color:#aaa;border-color:rgba(120,120,120,.25)}
+.b-money{background:rgba(76,175,80,.12);color:#81c784;border-color:rgba(76,175,80,.35)}
+.b-genius{background:rgba(123,94,167,.15);color:#b39ddb;border-color:rgba(123,94,167,.4)}
+.b-master{background:rgba(255,193,7,.12);color:#ffd54f;border-color:rgba(255,193,7,.35)}
+.b-karmic{background:rgba(192,57,43,.1);color:#ef9a9a;border-color:rgba(192,57,43,.3)}
+.b-leader{background:rgba(255,138,101,.12);color:#ff8a65;border-color:rgba(255,138,101,.3)}
+.mr{display:flex;align-items:flex-start;justify-content:space-between;background:var(--p2);border:1px solid var(--b);border-radius:9px;padding:12px 14px;margin-bottom:8px;gap:10px;transition:border-color .2s}
+.mr:hover{border-color:var(--b2)}
+.av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;border:1px solid var(--b)}
+.avG{background:rgba(201,168,76,.18)}.avP{background:rgba(123,94,167,.22)}.avB{background:rgba(90,143,163,.18)}
+.avV{background:rgba(39,174,96,.12)}.avK{background:rgba(120,120,120,.12)}
+.pn{font-size:13px;font-weight:700;line-height:1.3}
+.pm{font-size:11px;color:var(--d2);line-height:1.5;margin-top:2px}
+.info{background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.18);border-radius:7px;padding:11px 14px;font-size:12px;color:var(--d2);line-height:1.8}
+.info strong{color:var(--g)}
+.info.ok{background:rgba(39,174,96,.06);border-color:rgba(39,174,96,.25);color:#81c784}
+.info.er{background:rgba(192,57,43,.06);border-color:rgba(192,57,43,.25);color:#e57373}
+.divider{border:none;border-top:1px solid var(--b);margin:12px 0}
+.fl{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.flb{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mt10{margin-top:10px}
+.sd{display:flex;align-items:center;gap:10px;margin:18px 0 10px}
+.sl{flex:1;height:1px;background:var(--b)}
+.et{background:transparent;border:1px dashed transparent;border-radius:4px;color:var(--g);font-size:10px;font-family:'Georgia',serif;letter-spacing:1.5px;text-transform:uppercase;padding:3px 7px;cursor:text;transition:border-color .2s;min-width:60px}
+.et:hover{border-color:var(--b)}.et:focus{border-color:var(--g);background:var(--p2);outline:none}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:200;align-items:center;justify-content:center;padding:20px}
+.overlay.open{display:flex}
+.modal{background:var(--p1);border:1px solid var(--b2);border-radius:14px;padding:22px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
+.mt2{font-size:15px;color:var(--g);letter-spacing:.8px;margin-bottom:16px;font-weight:700}
+.confirm-full{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:300;align-items:center;justify-content:center;padding:30px}
+.confirm-full.open{display:flex}
+.confirm-box{background:var(--p1);border:2px solid var(--b2);border-radius:16px;padding:30px;width:100%;max-width:480px;text-align:center}
+.sug{display:flex;align-items:center;justify-content:space-between;background:var(--p2);border:1px solid var(--b);border-radius:8px;padding:11px 14px;margin-bottom:7px;cursor:pointer;transition:border-color .2s;gap:8px}
+.sug:hover{border-color:var(--b2)}
+.sug.top{border-color:rgba(76,175,133,.4)}
+.sug.selected{border-color:var(--g);background:rgba(201,168,76,.07)}
+.bw{height:4px;background:rgba(255,255,255,.06);border-radius:2px;width:70px;overflow:hidden;flex-shrink:0}
+.bbar{height:100%;border-radius:2px}
+.sh{color:#4caf85}.sm2{color:var(--g)}.sl2{color:#e57373}
+.cd{background:var(--p2);border:1px solid var(--b);border-radius:9px;padding:14px;margin-top:10px;font-size:12px;line-height:1.9;color:var(--d2)}
+.cd strong{color:var(--t)}.hl{color:var(--g)}.wn{color:#e57373}
+.cd-section{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--b)}
+.cd-section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px}
+.sc{background:var(--p2);border:1px solid var(--b);border-radius:8px;padding:10px;text-align:center}
+.sn{font-size:22px;color:var(--g);font-weight:700}
+.slb2{font-size:9px;color:var(--d);margin-top:3px;letter-spacing:.5px;text-transform:uppercase;line-height:1.3}
+.t-scroll{overflow-x:auto;padding-bottom:20px}
+.t-wrap{display:inline-flex;flex-direction:column;align-items:center;min-width:100%;padding:0 10px}
+.t-branch{display:flex;flex-direction:column;align-items:center}
+.t-node{background:var(--p2);border:1px solid var(--b);border-radius:9px;padding:9px 10px;text-align:center;width:120px;cursor:pointer;transition:border-color .2s}
+.t-node:hover{border-color:var(--b2)}
+.t-node.owner{border-width:2px}
+.t-avar{width:34px;height:34px;border-radius:50%;border:1px solid var(--b);display:flex;align-items:center;justify-content:center;font-size:14px;margin:0 auto 4px}
+.t-nm{font-size:10px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t-sub{font-size:9px;color:var(--d2);margin-top:1px;line-height:1.3}
+.vl{width:1px;height:14px;background:var(--b);margin:0 auto}
+.t-ch{display:flex;gap:8px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+.sw{position:relative;margin-bottom:12px}
+.sw input{width:100%;background:var(--p2);border:1px solid var(--b);border-radius:7px;padding:9px 12px 9px 30px;color:var(--t);font-size:13px;font-family:'Georgia',serif;outline:none}
+.sw input:focus{border-color:var(--g)}
+.si{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--d);font-size:13px;pointer-events:none}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-top:4px}
+.cal-cell{background:var(--p2);border:1px solid var(--b);border-radius:4px;padding:6px 3px;text-align:center;font-size:10px;cursor:pointer;transition:background .15s;min-height:54px}
+.cal-cell:hover{background:var(--g4)}
+.cal-cell.today{border-color:var(--g);color:var(--g)}
+.cal-cell.sel{background:var(--g4);border-color:var(--b2)}
+.cal-cell.day-great{background:rgba(76,175,133,.15);border-color:rgba(76,175,133,.5)}
+.cal-cell.day-good{background:rgba(201,168,76,.1);border-color:rgba(201,168,76,.4)}
+.cal-cell.day-bad{background:rgba(192,57,43,.1);border-color:rgba(192,57,43,.35)}
+.cal-cell.day-okay{background:var(--p2)}
+.cal-hdr{font-size:9px;color:var(--d);text-align:center;padding:3px 0}
+.cal-num{font-size:11px;font-weight:700}
+.cal-lp{font-size:8px;color:var(--d2)}
+.tc{background:var(--p2);border:1px solid var(--b);border-radius:9px;padding:14px;margin-bottom:10px}
+.tt{font-size:10px;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.ep{background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.28);border-radius:20px;padding:3px 9px;font-size:9px;color:#e57373;display:inline-flex;align-items:center;gap:3px;margin-bottom:3px}
+.cp2{background:rgba(39,174,96,.08);border:1px solid rgba(39,174,96,.22);border-radius:20px;padding:3px 9px;font-size:9px;color:#81c784;display:inline-flex;align-items:center;gap:3px;margin-bottom:3px}
+.guide-section{margin-bottom:8px;padding:11px 14px;background:rgba(201,168,76,.04);border-radius:7px;border:1px solid rgba(201,168,76,.1)}
+.guide-section h4{font-size:11px;color:var(--g);letter-spacing:.5px;margin-bottom:5px;font-weight:700}
+.scroll-list{max-height:380px;overflow-y:auto;border:1px solid var(--b);border-radius:8px;padding:8px}
+.trait-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.trait-pro{background:rgba(76,175,133,.08);border:1px solid rgba(76,175,133,.25);border-radius:14px;padding:2px 8px;font-size:10px;color:#81c784}
+.trait-con{background:rgba(192,57,43,.07);border:1px solid rgba(192,57,43,.22);border-radius:14px;padding:2px 8px;font-size:10px;color:#ef9a9a}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--p1);border:1px solid var(--b2);border-radius:8px;padding:10px 18px;color:var(--t);font-size:12px;z-index:400;display:none}
+.toast.show{display:block;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+.day-detail{background:var(--p3);border:1px solid var(--b);border-radius:7px;padding:10px 12px;margin-top:8px;font-size:11px;color:var(--d2);line-height:1.7}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-logo">Cornerstone Council<br>Recruitment CRM</div>
+  <div class="nav-tabs">
+    <button class="nt active" onclick="showView('add',this)">Add Recruit</button>
+    <button class="nt" onclick="showView('members',this)">Members</button>
+    <button class="nt" onclick="showView('tree',this)">Family Tree</button>
+    <button class="nt" onclick="showView('guide',this)">Guide</button>
+    <button class="nt" onclick="showView('cal',this)">Calendar</button>
+  </div>
+  <div class="nav-right">
+    <button class="tool-btn" id="undo-btn" onclick="undo()" title="Undo (Ctrl/Cmd+Z)">&#8630; Undo</button>
+    <button class="tool-btn" id="redo-btn" onclick="redo()" title="Redo (Ctrl/Cmd+Shift+Z)">&#8631; Redo</button>
+    <button class="tool-btn" onclick="saveHTML()">&#8681; Save HTML</button>
+    <a href="index.html" target="_blank" class="tool-btn" style="text-decoration:none">&#8594; Agent Portal</a>
+  </div>
+</div>
+
+<div class="view active" id="view-add">
+  <div class="card">
+    <div class="ct">New Recruit Assessment</div>
+    <div class="fr2">
+      <div class="fg"><label>Full Name</label><input id="in-name" placeholder="Full name" oninput="clrR()"></div>
+      <div class="fg"><label>Date of Birth</label><input type="date" id="in-dob" oninput="clrR()"></div>
+    </div>
+    <div class="fl mt10" style="gap:8px">
+      <button class="btn pri" onclick="analyze()" style="flex:1">Analyze Compatibility</button>
+      <button class="btn" onclick="clrF()">Clear</button>
+    </div>
+  </div>
+  <div id="res-area"></div>
+  <div class="card" id="conf-card" style="display:none">
+    <div class="ct">Confirm Placement</div>
+    <div id="conf-body"></div>
+    <hr class="divider">
+    <div class="fl mt10" style="gap:8px">
+      <button class="btn pri" onclick="askConfirm()" style="flex:1">Confirm &amp; Add to Hierarchy</button>
+      <button class="btn" onclick="cancelAdd()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="view" id="view-members">
+  <div class="sg" id="sg"></div>
+  <div class="sw"><span class="si">&#9906;</span><input placeholder="Search members..." id="sq" oninput="rMem()"></div>
+  <div id="ml"></div>
+</div>
+
+<div class="view" id="view-tree">
+  <div class="info" style="margin-bottom:14px">Click any <strong>agency label</strong> to rename it. Click any <strong>member card</strong> to edit their profile.</div>
+  <div class="t-scroll"><div class="t-wrap" id="tree-area"></div></div>
+</div>
+
+<div class="view" id="view-guide">
+  <div id="guide-content"></div>
+</div>
+
+<div class="view" id="view-cal">
+  <div class="card">
+    <div class="ct">Astrology Calendar — Personalized Day Forecasts</div>
+    <div class="fr2" style="margin-bottom:12px">
+      <div class="fg"><label>Select Date</label><input type="date" id="cal-date" oninput="calcDay()"></div>
+      <div class="fg"><label>Color Calendar For</label>
+        <select id="cal-agent" onchange="renderCalGrid();calcDay()">
+          <option value="">All agents (general)</option>
+        </select>
+      </div>
+    </div>
+    <div class="fr2" style="margin-bottom:12px">
+      <div class="fg"><label>Quick Jump</label>
+        <select id="cal-jump" onchange="jumpCal()">
+          <option value="">— jump —</option>
+          <option value="today">Today</option>
+          <option value="nm">Next Month</option>
+          <option value="pm">Prev Month</option>
+          <option value="ny">Next Year</option>
+          <option value="py">Prev Year</option>
+        </select>
+      </div>
+      <div class="fg"><label>Legend</label>
+        <div style="display:flex;gap:8px;align-items:center;font-size:10px;color:var(--d);height:38px;flex-wrap:wrap">
+          <span style="display:inline-block;width:10px;height:10px;background:rgba(76,175,133,.5);border-radius:2px"></span>Great
+          <span style="display:inline-block;width:10px;height:10px;background:rgba(201,168,76,.4);border-radius:2px"></span>Good
+          <span style="display:inline-block;width:10px;height:10px;background:var(--p2);border:1px solid var(--b);border-radius:2px"></span>Neutral
+          <span style="display:inline-block;width:10px;height:10px;background:rgba(192,57,43,.35);border-radius:2px"></span>Bad
+        </div>
+      </div>
+    </div>
+    <div id="cal-result" style="margin-bottom:16px"></div>
+    <div class="flb" style="margin-bottom:8px">
+      <button class="btn sm" onclick="calNav(-1)">&larr; Prev</button>
+      <span id="cal-month-lbl" style="font-size:13px;color:var(--g);font-weight:700"></span>
+      <button class="btn sm" onclick="calNav(1)">Next &rarr;</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px">
+      <div class="cal-hdr">Sun</div><div class="cal-hdr">Mon</div><div class="cal-hdr">Tue</div>
+      <div class="cal-hdr">Wed</div><div class="cal-hdr">Thu</div><div class="cal-hdr">Fri</div><div class="cal-hdr">Sat</div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <div id="cal-agents" style="margin-top:16px"></div>
+  </div>
+</div>
+
+<div class="overlay" id="edit-ov">
+  <div class="modal">
+    <div class="mt2" id="edit-title">Edit Member</div>
+    <div id="edit-body"></div>
+    <div class="fl mt10" style="gap:8px">
+      <button class="btn pri" onclick="saveEdit()" style="flex:1">Save Changes</button>
+      <button class="btn" onclick="closeOv('edit-ov')">Cancel</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="del-ov">
+  <div class="modal">
+    <div class="mt2">Remove Member</div>
+    <div id="del-body" style="font-size:13px;color:var(--d2);margin-bottom:16px;line-height:1.7"></div>
+    <div class="fl" style="gap:8px">
+      <button class="btn dan" id="del-btn" style="flex:1">Remove from Hierarchy</button>
+      <button class="btn" onclick="closeOv('del-ov')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="confirm-full" id="conf-full">
+  <div class="confirm-box">
+    <div style="font-size:32px;margin-bottom:12px;color:var(--g)">&#9670;</div>
+    <div style="font-size:18px;font-weight:700;color:var(--g);margin-bottom:10px;letter-spacing:1px">ARE YOU SURE?</div>
+    <div id="conf-full-body" style="font-size:14px;color:var(--d2);margin-bottom:24px;line-height:1.7"></div>
+    <div style="display:flex;gap:14px;justify-content:center">
+      <button class="btn dan" onclick="closeConf()" style="min-width:130px;font-size:14px;padding:12px">Cancel</button>
+      <button class="btn pri" onclick="doAdd()" style="min-width:130px;font-size:14px;padding:12px">Yes — Add Them</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SK='cc_crm_v13',AK='cc_ag_v8',CK='cc_ctr_v1';
+
+// ═══════════════════════════════════════════════════════════════════
+//  ASTROLOGY ENGINE
+// ═══════════════════════════════════════════════════════════════════
+const ZY={rat:[1924,1936,1948,1960,1972,1984,1996,2008,2020,2032],ox:[1925,1937,1949,1961,1973,1985,1997,2009,2021,2033],tiger:[1926,1938,1950,1962,1974,1986,1998,2010,2022,2034],cat:[1927,1939,1951,1963,1975,1987,1999,2011,2023,2035],dragon:[1928,1940,1952,1964,1976,1988,2000,2012,2024,2036],snake:[1929,1941,1953,1965,1977,1989,2001,2013,2025,2037],horse:[1930,1942,1954,1966,1978,1990,2002,2014,2026,2038],goat:[1931,1943,1955,1967,1979,1991,2003,2015,2027,2039],monkey:[1932,1944,1956,1968,1980,1992,2004,2016,2028,2040],rooster:[1933,1945,1957,1969,1981,1993,2005,2017,2029,2041],dog:[1934,1946,1958,1970,1982,1994,2006,2018,2030,2042],pig:[1935,1947,1959,1971,1983,1995,2007,2019,2031,2043]};
+const CNY={1960:'01/28',1961:'02/15',1962:'02/05',1963:'01/25',1964:'02/13',1965:'02/02',1966:'01/21',1967:'02/09',1968:'01/30',1969:'02/17',1970:'02/06',1971:'01/27',1972:'02/15',1973:'02/03',1974:'01/23',1975:'02/11',1976:'01/31',1977:'02/18',1978:'02/07',1979:'01/28',1980:'02/16',1981:'02/05',1982:'01/25',1983:'02/13',1984:'02/02',1985:'02/20',1986:'02/09',1987:'01/29',1988:'02/17',1989:'02/06',1990:'01/27',1991:'02/15',1992:'02/04',1993:'01/23',1994:'02/10',1995:'01/31',1996:'02/19',1997:'02/07',1998:'01/28',1999:'02/16',2000:'02/05',2001:'01/24',2002:'02/12',2003:'02/01',2004:'01/22',2005:'02/09',2006:'01/29',2007:'02/18',2008:'02/07',2009:'01/26',2010:'02/14',2011:'02/03',2012:'01/23',2013:'02/10',2014:'01/31',2015:'02/19',2016:'02/08',2017:'01/28',2018:'02/16',2019:'02/05',2020:'01/25',2021:'02/12',2022:'02/01',2023:'01/22',2024:'02/10',2025:'01/29',2026:'02/17'};
+const STEMS=['Metal','Metal','Water','Water','Wood','Wood','Fire','Fire','Earth','Earth'];
+function getStemEl(year){return STEMS[((year%10)+10)%10]}
+const MONTH_SIGNS=['ox','tiger','cat','dragon','snake','horse','goat','monkey','rooster','dog','pig','rat'];
+const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function getCNYear(dob){
+  const d=new Date(dob+'T12:00:00');let y=d.getFullYear(),m=d.getMonth()+1,day=d.getDate();
+  if(CNY[y]){const[cm,cd]=CNY[y].split('/').map(Number);if(m<cm||(m===cm&&day<cd))y--}
+  return y;
+}
+function getZodiac(dob){
+  const y=getCNYear(dob);
+  for(const[s,ys]of Object.entries(ZY))if(ys.includes(y))return s;
+  return Object.keys(ZY)[((y-1900)%12+12)%12];
+}
+function getElement(dob){return getStemEl(getCNYear(dob))}
+function getMonthSign(dob){
+  const d=new Date(dob+'T12:00:00');
+  let mi=d.getMonth();
+  if(d.getDate()<7&&mi>0)mi--;
+  else if(d.getDate()<7&&mi===0)mi=11;
+  return MONTH_SIGNS[mi];
+}
+function fullSign(dob){if(!dob)return'';return getElement(dob)+' '+cap(getZodiac(dob))}
+
+// ═══════════════════════════════════════════════════════════════════
+//  NUMEROLOGY — full chain tracking for hidden carriers
+// ═══════════════════════════════════════════════════════════════════
+function getLPChain(dob){
+  let s=dob.replace(/-/g,'').split('').map(Number).reduce((a,b)=>a+b,0);
+  const chain=[s];
+  while(s>9&&![11,22,33].includes(s)){
+    s=s.toString().split('').map(Number).reduce((a,b)=>a+b,0);
+    chain.push(s);
+  }
+  return chain;
+}
+function getLP(dob){const c=getLPChain(dob);return c[c.length-1]}
+function getDayE(dob){let d=parseInt(dob.split('-')[2]);while(d>9)d=d.toString().split('').map(Number).reduce((a,b)=>a+b,0);return d}
+function getBirthDay(dob){return parseInt(dob.split('-')[2])}
+
+// PERSONAL YEAR — uses MOST RECENT BIRTHDAY YEAR (last passed birthday)
+function getPersonalYear(dob,refDate){
+  if(!dob)return null;
+  const ref=refDate||new Date();
+  const parts=dob.split('-');
+  const mm=parseInt(parts[1]),dd=parseInt(parts[2]);
+  let useYear;
+  const refY=ref.getFullYear(),refM=ref.getMonth()+1,refD=ref.getDate();
+  if(refM>mm||(refM===mm&&refD>=dd))useYear=refY;
+  else useYear=refY-1;
+  const yrDigits=String(useYear).split('').map(Number).reduce((a,b)=>a+b,0);
+  let s=mm+dd+yrDigits;
+  while(s>9&&![11,22,33].includes(s))s=s.toString().split('').map(Number).reduce((a,b)=>a+b,0);
+  return s;
+}
+function getPersonalMonth(dob,refDate){
+  const ref=refDate||new Date();
+  const py=getPersonalYear(dob,ref);
+  if(!py)return null;
+  let s=py+(ref.getMonth()+1);
+  while(s>9&&![11,22,33].includes(s))s=s.toString().split('').map(Number).reduce((a,b)=>a+b,0);
+  return s;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  HIDDEN NUMBER CARRIERS — master, money, genius, leader, karmic
+// ═══════════════════════════════════════════════════════════════════
+function detectSpecial(dob){
+  if(!dob)return[];
+  const tags=[];
+  const day=getBirthDay(dob);
+  const dayE=getDayE(dob);
+  const chain=getLPChain(dob);
+  const finalLP=chain[chain.length-1];
+  const all=new Set([...chain,day,dayE]);
+
+  // MASTER NUMBERS
+  if(all.has(11)||finalLP===11)tags.push({cls:'b-master',label:'Master 11',desc:'Illuminator vibration — heightened intuition, idealistic visionary, spiritual genius. Operates at elevated frequency. Anxiety-prone if unbalanced.'});
+  if(all.has(22)||finalLP===22)tags.push({cls:'b-master',label:'Master 22',desc:'Master Builder — combines LP4 discipline with LP11 vision. Capable of building empires. Pressure of master number can crush if unsupported.'});
+  if(all.has(33)||finalLP===33)tags.push({cls:'b-master',label:'Master 33',desc:'Master Teacher — embodied compassion, healer, the rarest path. Risk: self-sacrifice to extremes.'});
+
+  // MONEY CARRIERS
+  const moneyHits=[8,17,26].filter(n=>all.has(n));
+  if(moneyHits.length){
+    let extra='';
+    if(moneyHits.includes(17))extra+=' 17/8: spiritual money — wealth aligned with higher purpose.';
+    if(moneyHits.includes(26))extra+=' 26/8: collaborative wealth — money built with partners.';
+    tags.push({cls:'b-money',label:'Money '+moneyHits.join('/'),desc:'8 vibration — natural ability to attract material wealth. Executive presence, business mind.'+extra});
+  }
+  if(all.has(28))tags.push({cls:'b-money',label:'Magnetic 28',desc:'28/1 — reduces to 1 (leader) but carries 8 wealth energy underneath. The "magnetic money" number. Entrepreneur leader who attracts money through self-direction.'});
+
+  // GENIUS CARRIERS
+  const geniusBase=[7,25].filter(n=>all.has(n));
+  if(geniusBase.length){
+    let extra='';
+    if(geniusBase.includes(25))extra+=' 25/7: wisdom through experience, pure scholarly mind without karmic baggage.';
+    tags.push({cls:'b-genius',label:'Genius '+geniusBase.join('/'),desc:'7 vibration — analytical depth, intuitive intelligence, scholar/seeker mind.'+extra});
+  }
+  if(all.has(16))tags.push({cls:'b-genius',label:'Tower 16/7',desc:'16/7 carries a destructive-rebirth frequency — what is built incorrectly must fall before truth rises. Exceptional intuition forged through hardship. Genius mind with karmic weight. Beware pride and isolation.'});
+
+  // LEADER CARRIERS
+  if(all.has(10))tags.push({cls:'b-leader',label:'Leader 10',desc:'10/1 — completed-cycle leadership, born to start things from zero.'});
+  if(all.has(19))tags.push({cls:'b-leader',label:'Karmic Leader 19',desc:'19/1 — leadership through tested fire. Past-life karmic lesson around abuse of power. Must lead with humility or face repeated failure.'});
+
+  // KARMIC DEBT — beyond what's already covered
+  if(all.has(13))tags.push({cls:'b-karmic',label:'Karmic 13/4',desc:'13 — must overcome shortcuts and laziness. Hard work, discipline, integrity bring rewards.'});
+  if(all.has(14))tags.push({cls:'b-karmic',label:'Karmic 14/5',desc:'14 — must overcome excess. Discipline within freedom is the lesson.'});
+
+  return tags;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  TRAITS — pros/cons by LP and zodiac
+// ═══════════════════════════════════════════════════════════════════
+const LP_TRAITS={
+  1:{pros:['natural leader','independent','self-starter','pioneering','decisive'],cons:['stubborn','dislikes authority','isolation tendency','can dominate']},
+  2:{pros:['diplomatic','sensitive','peacemaker','intuitive partner','team-builder'],cons:['indecisive','over-sensitive','people-pleaser','passive']},
+  3:{pros:['charismatic','creative','optimistic','social magnet','expressive'],cons:['scatters energy','undisciplined','surface focus','attention-seeking']},
+  4:{pros:['hard worker','disciplined','reliable','foundation builder','never burns out'],cons:['rigid','slow to adapt','workaholic','resistant to change']},
+  5:{pros:['adaptable','freedom-loving','charismatic','quick learner','great closer'],cons:['restless','commitment-shy','can be reckless','inconsistent']},
+  6:{pros:['nurturer','responsible','protective leader','community-driven','generous'],cons:['controlling','martyr complex','takes on too much','codependent']},
+  7:{pros:['genius mind','deep thinker','intuitive','truth-seeker','strategic'],cons:['aloof','overthinks','isolation tendency','distrustful']},
+  8:{pros:['money magnet','executive presence','ambitious','material mastery','authoritative'],cons:['workaholic','power-driven','can prioritize wealth over relationships','intimidating']},
+  9:{pros:['humanitarian','wise','big-picture thinker','charismatic','old soul'],cons:['detached','idealist disappointment','struggles with intimacy','prone to escapism']},
+  11:{pros:['visionary','master intuitive','inspirational','spiritual genius','channels insight'],cons:['anxiety-prone','sensory overload','impractical at times','high-strung']},
+  22:{pros:['master builder','large-scale executor','practical visionary','legacy creator'],cons:['pressure cooker','collapses under master weight','controlling','perfectionist']},
+  33:{pros:['master teacher','healer','embodied compassion','transformative leader'],cons:['self-sacrifice extreme','absorbs others suffering','burns out helping']},
+};
+const ZODIAC_TRAITS={
+  rat:{pros:['resourceful','witty','adaptable','great with money','opportunistic','quick mind'],cons:['anxious','manipulative','hoarder','gossip-prone','overthinks']},
+  ox:{pros:['reliable','hardworking','patient','stable','never burns out','loyal'],cons:['stubborn','slow to change','holds grudges','traditional to a fault']},
+  tiger:{pros:['brave','charismatic','born leader','fearless','magnetic','inspiring'],cons:['impulsive','aggressive','restless','ego-driven','quick temper']},
+  cat:{pros:['diplomatic','perceptive','peacekeeper','graceful','intelligent reader'],cons:['conflict-avoidant','indecisive','passive-aggressive','sensitive']},
+  dragon:{pros:['charismatic','lucky','born leader','magnetic','ambitious','larger-than-life'],cons:['egotistical','demanding','domineering','low patience','arrogant']},
+  snake:{pros:['wise','strategic','deep thinker','money-savvy','intuitive'],cons:['secretive','jealous','slow to trust','vindictive','calculating']},
+  horse:{pros:['energetic','charismatic','freedom-loving','REBEL','passionate','great closer'],cons:['restless','impulsive','hates routine','hot-tempered','stubborn']},
+  goat:{pros:['creative','gentle','artistic','empathetic','supportive','intuitive'],cons:['pessimistic','dependency-prone','indecisive','victim mentality','passive']},
+  monkey:{pros:['clever','adaptable','witty','problem-solver','charming','quick learner'],cons:['mischievous','scatters focus','can be cunning','impatient','tricky']},
+  rooster:{pros:['honest','hardworking','organized','perfectionist','observant','disciplined'],cons:['critical','blunt','perfectionist paralysis','pride-driven','judgmental']},
+  dog:{pros:['loyal','honest','protective','principled','never abandons','justice-seeking'],cons:['anxious','pessimistic','stubborn','takes things personally','worrier']},
+  pig:{pros:['generous','sincere','hardworking','kind-hearted','trustworthy'],cons:['naive','exploitable','materialistic','can be lazy','overly trusting']},
+};
+
+function getMemberTraits(m){
+  if(!m.dob)return{pros:[],cons:[],special:[]};
+  const lpT=LP_TRAITS[m.lifePath]||{pros:[],cons:[]};
+  const zT=ZODIAC_TRAITS[m.zodiac]||{pros:[],cons:[]};
+  const pros=Array.from(new Set([...lpT.pros,...zT.pros])).slice(0,8);
+  const cons=Array.from(new Set([...lpT.cons,...zT.cons])).slice(0,6);
+  const special=detectSpecial(m.dob);
+  return{pros,cons,special};
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  COMPATIBILITY
+// ═══════════════════════════════════════════════════════════════════
+const ZC={rat:{best:['dragon','monkey','ox'],good:['cat','pig'],clash:['horse']},ox:{best:['snake','rooster','rat'],good:['monkey','pig'],clash:['goat']},tiger:{best:['horse','dog','pig'],good:['cat','dragon'],clash:['monkey']},cat:{best:['goat','pig','dog'],good:['tiger','dragon','monkey'],clash:['rooster']},dragon:{best:['rat','monkey','rooster'],good:['tiger','cat','pig'],clash:['dog']},snake:{best:['rooster','ox','monkey'],good:['dragon','rat'],clash:['pig']},horse:{best:['tiger','dog','goat'],good:['cat','pig'],clash:['rat']},goat:{best:['cat','pig','horse'],good:['tiger','ox'],clash:['ox']},monkey:{best:['rat','dragon','snake'],good:['cat','ox','goat'],clash:['tiger']},rooster:{best:['ox','snake','dragon'],good:['pig','rat','monkey'],clash:['cat']},dog:{best:['tiger','cat','horse'],good:['rat','pig'],clash:['dragon']},pig:{best:['tiger','cat','goat'],good:['dog','horse','rat'],clash:['snake']}};
+const LPC={1:{best:[1,5,7],good:[3,9],ok:[2,4,6,8]},2:{best:[2,8,6],good:[4,9],ok:[1,3,5,7]},3:{best:[3,1,9],good:[5,6],ok:[2,4,7,8]},4:{best:[4,2,8],good:[6,7],ok:[1,3,5,9]},5:{best:[5,1,7],good:[3,9],ok:[2,4,6,8]},6:{best:[6,2,4],good:[3,8,9],ok:[1,5,7]},7:{best:[7,5,1],good:[4,2],ok:[3,6,8,9]},8:{best:[8,2,6],good:[4,9],ok:[1,3,5,7]},9:{best:[9,3,6],good:[1,2,8],ok:[4,5,7]},11:{best:[11,2,22],good:[7,3],ok:[1,4,6,8,9]},22:{best:[22,4,11],good:[8,2],ok:[1,3,5,6,7,9]},33:{best:[33,6,3],good:[9,11],ok:[1,2,4,5,7,8]}};
+const TRMAP={rat:'t1',dragon:'t1',monkey:'t1',ox:'t2',snake:'t2',rooster:'t2',tiger:'t3',horse:'t3',dog:'t3',cat:'t4',goat:'t4',pig:'t4'};
+
+function zSc(a,b){if(a===b)return 82;const c=ZC[a];if(!c)return 55;if(c.best.includes(b))return 95;if(c.good.includes(b))return 76;if(c.clash.includes(b))return 15;return 55}
+function lSc(a,b){if(a===b)return 94;const c=LPC[a]||LPC[1];if(c.best.includes(b))return 90;if(c.good.includes(b))return 74;if(c.ok.includes(b))return 58;return 42}
+function dSc(a,b){const df=Math.abs(a-b);return df===0?92:df===1?80:df<=3?65:50}
+function tot(r,m){return Math.round(zSc(r.zodiac,m.zodiac)*.50+lSc(r.lifePath,m.lifePath)*.35+dSc(r.dayEnergy,m.dayEnergy)*.15)}
+function slbl(s){return s>=85?{l:'Exceptional',c:'sh'}:s>=70?{l:'Strong',c:'sm2'}:s>=55?{l:'Moderate',c:'sm2'}:{l:'Challenging',c:'sl2'}}
+function bclr(s){return s>=80?'#4caf85':s>=60?'var(--g)':'#e57373'}
+
+function getZodiacRel(a,b){
+  if(a===b)return{label:'same sign — exact mirror',good:true};
+  const c=ZC[a];if(!c)return{label:'neutral',good:true};
+  if(c.best.includes(b))return{label:'best trine allies — natural, effortless bond',good:true};
+  if(c.good.includes(b))return{label:'harmonious pair — complementary energies',good:true};
+  if(c.clash.includes(b))return{label:'direct clash — opposite natures, structural tension',good:false};
+  return{label:'neutral — workable but no natural pull',good:true};
+}
+function getLPRel(a,b){
+  if(a===b)return{label:'exact match — deepest possible resonance',good:true};
+  const c=LPC[a]||LPC[1];
+  if(c.best.includes(b))return{label:'peak harmony — these numbers were made to work together',good:true};
+  if(c.good.includes(b))return{label:'strong alignment — natural collaboration',good:true};
+  if(c.ok.includes(b))return{label:'workable — requires more conscious effort to align',good:true};
+  return{label:'friction — fundamentally different frequencies',good:false};
+}
+
+function compatDetail(r,m){
+  const zs=zSc(r.zodiac,m.zodiac),ls=lSc(r.lifePath,m.lifePath),ds=dSc(r.dayEnergy,m.dayEnergy);
+  const total=Math.round(zs*.5+ls*.35+ds*.15);
+  const zRel=getZodiacRel(r.zodiac,m.zodiac);
+  const lRel=getLPRel(r.lifePath,m.lifePath);
+  const sameTrine=TRMAP[r.zodiac]===TRMAP[m.zodiac];
+  const sameElem=r.dob&&m.dob&&getElement(r.dob)===getElement(m.dob);
+  const rFS=r.dob?fullSign(r.dob):cap(r.zodiac);
+  const mFS=m.dob?fullSign(m.dob):cap(m.zodiac);
+  const rMS=r.dob?getMonthSign(r.dob):'?';
+  const mMS=m.dob?getMonthSign(m.dob):'?';
+
+  let zNarr='';
+  if(zs>=90)zNarr=`The ${rFS} and ${mFS} are natural allies. This is one of the strongest zodiac pairings in the system. They intuitively understand how the other moves, thinks, and leads. In a downline, communication flows without friction and both push each other higher.`;
+  else if(zs===82)zNarr=`Both are ${rFS}. Same-sign pairings create a mirror dynamic — deep instinctive understanding. Risk: shared blind spots. They need accountability from different signs in the wider team.`;
+  else if(zs>=75)zNarr=`The ${rFS} and ${mFS} are harmonious. Their energies are compatible and mutually supportive. They likely have complementary strengths — one fills gaps the other has.`;
+  else if(zs<=20)zNarr=`The ${rFS} and ${mFS} are direct clash signs — the most challenging zodiac pairing. Their core natures are fundamentally opposed. One's strength is the other's weakness. Their instinctive approaches to leadership and communication will create constant low-level resistance. This does NOT mean they cannot work together, but it requires explicit awareness, mutual respect, and strong structure to prevent energy drain.`;
+  else zNarr=`The ${rFS} and ${mFS} sit in a neutral zone — no natural pull, but no inherent clash. The relationship will be shaped by Life Path alignment and personal character rather than zodiac energy.`;
+
+  let trineNote='';
+  if(sameTrine)trineNote=`<br><br>Same trine: both belong to the same fundamental group. They share the same hunger and processing style. Major structural advantage in a team.`;
+  if(sameElem)trineNote+=`<br>Same element (${getElement(r.dob)}): adds another layer of resonance beyond the sign itself.`;
+
+  let lpNarr='';
+  if(ls>=90)lpNarr=`Life Paths ${r.lifePath} and ${m.lifePath} ${r.lifePath===m.lifePath?'are identical — exact same life mission, frequency, and internal compass':'are among the most resonant pairings in numerology'}. Natural shorthand. The recruit absorbs the upline's training and philosophy without friction.`;
+  else if(ls>=70)lpNarr=`LP ${r.lifePath} and LP ${m.lifePath} have genuine harmonic alignment. Their life missions are compatible. The upline can guide this recruit because their teaching style resonates with how this person learns and leads.`;
+  else if(ls>=55)lpNarr=`LP ${r.lifePath} and LP ${m.lifePath} can work together but require conscious effort. They don't naturally speak the same frequency. Worth naming explicitly in onboarding.`;
+  else lpNarr=`LP ${r.lifePath} and LP ${m.lifePath} are in challenging alignment. Their fundamental orientations toward purpose, effort, and success differ significantly. Place with care.`;
+
+  let dayNarr='';
+  if(ds>=90)dayNarr=`Identical Day Energy (${r.dayEnergy}). Same LP, same Day — they operate on the exact same frequency at every level. Communication will feel natural. Exceptionally rare.`;
+  else if(ds>=78)dayNarr=`Near-matching Day Energies (${r.dayEnergy} + ${m.dayEnergy}). Their execution rhythms are very close. Day-to-day pace, standards, and timing will feel naturally aligned.`;
+  else if(ds>=63)dayNarr=`Complementary Day Energies (${r.dayEnergy} + ${m.dayEnergy}). Different but compatible execution styles. In a team, the difference adds balance.`;
+  else dayNarr=`Different Day Energies (${r.dayEnergy} + ${m.dayEnergy}). Their daily execution rhythms run at different speeds and styles. Name this explicitly so neither reads the difference as disrespect.`;
+
+  return`<div class="cd">
+    <div class="cd-section"><strong>Zodiac — ${rFS} + ${mFS}</strong><br>
+      <span class="${zRel.good?'hl':'wn'}">${zRel.label}</span> · Zodiac Score: <strong>${zs}</strong>/100<br><br>${zNarr}${trineNote}</div>
+    <div class="cd-section"><strong>Life Path — LP${r.lifePath} + LP${m.lifePath}</strong><br>
+      <span class="${lRel.good?'hl':'wn'}">${lRel.label}</span> · LP Score: <strong>${ls}</strong>/100<br><br>${lpNarr}</div>
+    <div class="cd-section"><strong>Day Energy — Day ${r.dayEnergy} + Day ${m.dayEnergy}</strong><br>
+      Day Score: <strong>${ds}</strong>/100<br><br>${dayNarr}</div>
+    <div class="cd-section"><strong>Month Signs (Secondary)</strong><br>
+      Recruit: <strong>${cap(rMS)}</strong> · Upline: <strong>${cap(mMS)}</strong></div>
+    <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--b);font-size:13px">
+      <strong>Total: <span class="${slbl(total).c}" style="font-size:16px">${total}%</span></strong>
+      &nbsp;<span style="color:var(--d);font-size:11px">Zodiac 50% + LP 35% + Day 15%</span>
+    </div></div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  PERSONALIZED DAY FORECAST — calendar
+// ═══════════════════════════════════════════════════════════════════
+function dayForecastForAgent(agent,dateStr){
+  if(!agent.dob)return{tier:'okay',score:50,notes:[]};
+  const dZod=getZodiac(dateStr);
+  const dLP=getLP(dateStr);
+  const dDE=getDayE(dateStr);
+  const dDay=getBirthDay(dateStr);
+  const dChain=getLPChain(dateStr);
+  let score=50;
+  const notes=[];
+
+  if(dZod===agent.zodiac){score+=10;notes.push(`${cap(dZod)} day matches your year sign — natural energy day`)}
+  else if(ZC[agent.zodiac]?.best.includes(dZod)){score+=20;notes.push(`${cap(dZod)} day is a trine ally to your ${cap(agent.zodiac)} — favored day`)}
+  else if(ZC[agent.zodiac]?.good.includes(dZod)){score+=10;notes.push(`${cap(dZod)} day harmonizes with your ${cap(agent.zodiac)}`)}
+  else if(ZC[agent.zodiac]?.clash.includes(dZod)){score-=25;notes.push(`${cap(dZod)} day clashes with your ${cap(agent.zodiac)} — friction day, avoid major decisions`)}
+
+  if(dLP===agent.lifePath){score+=15;notes.push(`Day's LP ${dLP} matches yours — purpose-aligned day`)}
+  else if(LPC[agent.lifePath]?.best.includes(dLP)){score+=10;notes.push(`Day's LP ${dLP} resonates with your LP ${agent.lifePath}`)}
+  else if(!LPC[agent.lifePath]?.best.includes(dLP)&&!LPC[agent.lifePath]?.good.includes(dLP)&&!LPC[agent.lifePath]?.ok.includes(dLP)){score-=10;notes.push(`Day's LP ${dLP} runs counter to your LP ${agent.lifePath}`)}
+
+  if(dDE===agent.dayEnergy){score+=10;notes.push(`Day Energy ${dDE} matches yours — execution rhythm aligned`)}
+
+  // Special carriers in the date
+  if([8,17,26].includes(dDay)||[8,17,26].includes(dLP)){score+=8;notes.push(`Money number day (${[8,17,26].includes(dDay)?dDay:dLP}) — favored for financial decisions, closes, contracts`)}
+  if(dDay===28||dLP===28||dChain.includes(28)){score+=5;notes.push(`28 active — magnetic money + leader energy, ideal for entrepreneurial moves`)}
+  if(dChain.includes(16)){notes.push(`16/7 Tower active — breakthrough or breakdown day, expect depth`);score+=3}
+  else if([7,25].includes(dDay)||[7,25].includes(dLP)){score+=5;notes.push(`Genius number day — favored for study, planning, deep work`)}
+  if([11,22,33].includes(dLP)){score+=8;notes.push(`Master number day (LP ${dLP}) — heightened spiritual potency`)}
+  if(dChain.includes(13)||dChain.includes(14)||dChain.includes(19)){notes.push(`Karmic number active — extra discipline required`)}
+
+  const refDate=new Date(dateStr+'T12:00:00');
+  const py=getPersonalYear(agent.dob,refDate);
+  if(py===dLP){score+=5;notes.push(`Day's LP matches your Personal Year ${py} — themed day`)}
+
+  let tier;
+  if(score>=80)tier='great';
+  else if(score>=65)tier='good';
+  else if(score>=45)tier='okay';
+  else tier='bad';
+  return{tier,score,notes};
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  DATA & STATE
+// ═══════════════════════════════════════════════════════════════════
+const ADEF={
+  cornerstone:{name:'Cornerstone Council',signs:['tiger','horse','dog'],col:'#c9a84c',bc2:'bg',trineId:'t3',foundingDob:''},
+  radiant:{name:'Radiant Financial',signs:['dragon','rat','monkey'],col:'#b39ddb',bc2:'bp',trineId:'t1',foundingDob:''},
+  trine2:{name:'Agency Three',signs:['ox','snake','rooster'],col:'#80cbc4',bc2:'bb',trineId:'t2',foundingDob:''},
+  trine4:{name:'Agency Four',signs:['cat','goat','pig'],col:'#81c784',bc2:'bv',trineId:'t4',foundingDob:''},
+};
+
+const SEED=[
+  {id:'tyrese-001',name:'Tyrese Williams',dob:'2002-08-04',zodiac:'horse',lifePath:7,dayEnergy:4,agency:'cornerstone',uplineId:null,role:'Owner – Cornerstone',commission:'',notes:'',addedAt:'2024-01-01',protected:true,isOwner:true},
+  {id:'elijah-001',name:'Elijah Mang',dob:'2000-02-23',zodiac:'dragon',lifePath:1,dayEnergy:5,agency:'radiant',uplineId:null,role:'Owner – Radiant Financial',commission:'',notes:'',addedAt:'2024-01-01',protected:true,isOwner:true},
+  {id:'max-001',name:'Max',dob:'2005-06-10',zodiac:'rooster',lifePath:4,dayEnergy:1,agency:'trine2',uplineId:null,role:'Owner – Agency Three',commission:'',notes:'',addedAt:'2024-01-01',protected:false,isOwner:true},
+  {id:'emily-001',name:'Emily Cribb',dob:'2007-03-07',zodiac:'pig',lifePath:1,dayEnergy:7,agency:'trine4',uplineId:null,role:'Owner – Agency Four',commission:'',notes:'',addedAt:'2024-01-01',protected:false,isOwner:true},
+  {id:'joshua-001',name:'Joshua Cribb',dob:'2002-09-21',zodiac:'horse',lifePath:7,dayEnergy:3,agency:'cornerstone',uplineId:'tyrese-001',role:'Direct to Cornerstone',commission:'',notes:'',addedAt:'2024-01-01',protected:true,isOwner:false},
+  {id:'quincy-001',name:'Quincy Farley',dob:'1978-10-01',zodiac:'horse',lifePath:8,dayEnergy:1,agency:'cornerstone',uplineId:'tyrese-001',role:'Direct to Cornerstone',commission:'',notes:'',addedAt:'2024-01-01',protected:false,isOwner:false},
+];
+
+let members=[],agencies={},pending=null,editId=null,delId=null;
+let calYear=new Date().getFullYear(),calMonth=new Date().getMonth();
+let agencyCounter=5;
+let undoStack=[],redoStack=[];
+const MAX_UNDO=80;
+
+// ═══════════════════════════════════════════════════════════════════
+//  UNDO / REDO
+// ═══════════════════════════════════════════════════════════════════
+function snapshot(){return{members:JSON.parse(JSON.stringify(members)),agencies:JSON.parse(JSON.stringify(agencies)),counter:agencyCounter}}
+function restoreSnapshot(s){members=s.members;agencies=s.agencies;agencyCounter=s.counter}
+function pushHistory(){undoStack.push(snapshot());if(undoStack.length>MAX_UNDO)undoStack.shift();redoStack=[];updateUndoButtons()}
+function updateUndoButtons(){
+  document.getElementById('undo-btn').disabled=!undoStack.length;
+  document.getElementById('redo-btn').disabled=!redoStack.length;
+}
+function undo(){if(!undoStack.length)return;redoStack.push(snapshot());restoreSnapshot(undoStack.pop());saveAll();refresh();updateUndoButtons();toast('Undo')}
+function redo(){if(!redoStack.length)return;undoStack.push(snapshot());restoreSnapshot(redoStack.pop());saveAll();refresh();updateUndoButtons();toast('Redo')}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1500)}
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==='z'&&!e.shiftKey){e.preventDefault();undo()}
+  else if((e.metaKey||e.ctrlKey)&&((e.key==='z'&&e.shiftKey)||e.key==='y')){e.preventDefault();redo()}
+});
+
+// ═══════════════════════════════════════════════════════════════════
+//  STORAGE
+// ═══════════════════════════════════════════════════════════════════
+function load(){
+  try{const r=localStorage.getItem(SK);if(r)members=JSON.parse(r);else{members=JSON.parse(JSON.stringify(SEED));sv()}}catch(e){members=JSON.parse(JSON.stringify(SEED))}
+  try{const a=localStorage.getItem(AK);if(a)agencies=JSON.parse(a);else{agencies=JSON.parse(JSON.stringify(ADEF));svA()}}catch(e){agencies=JSON.parse(JSON.stringify(ADEF))}
+  try{const c=localStorage.getItem(CK);if(c)agencyCounter=parseInt(c)||5}catch(e){}
+  Object.keys(agencies).forEach(k=>{const n=parseInt(k.replace('agency',''));if(!isNaN(n)&&n>=agencyCounter)agencyCounter=n+1});
+  refresh();
+  const td=new Date().toISOString().split('T')[0];
+  document.getElementById('cal-date').value=td;
+  populateAgentSelect();calcDay();renderCalGrid();updateUndoButtons();
+}
+function sv(){try{localStorage.setItem(SK,JSON.stringify(members))}catch(e){alert('Storage error: '+e.message)}}
+function svA(){try{localStorage.setItem(AK,JSON.stringify(agencies))}catch(e){}}
+function svC(){try{localStorage.setItem(CK,String(agencyCounter))}catch(e){}}
+function saveAll(){
+  sv();svA();svC();
+  // Push CRM data to GitHub so all devices stay in sync
+  _ghPushCRM();
+}
+// GitHub push — sends CRM data as part of the full database payload
+// Reads GH config from localStorage (same config set in the Agent Portal)
+async function _ghPushCRM(){
+  const GHK='cc_gh_cfg';
+  let ghCfg=null;
+  try{ghCfg=JSON.parse(localStorage.getItem(GHK))||null}catch(e){return}
+  if(!ghCfg?.token||!ghCfg?.repo)return;
+  // Read all portal data too so we don't overwrite it with empty arrays
+  let portalUsers=[],portalDeals=[],portalSpend=[],portalInc=[];
+  try{portalUsers=JSON.parse(localStorage.getItem('cc_users'))||[]}catch(e){}
+  try{portalDeals=JSON.parse(localStorage.getItem('cc_deals'))||[]}catch(e){}
+  try{portalSpend=JSON.parse(localStorage.getItem('cc_spend'))||[]}catch(e){}
+  try{portalInc=JSON.parse(localStorage.getItem('cc_inc'))||[]}catch(e){}
+  const data={
+    version:'4.0',lastUpdated:new Date().toISOString(),
+    users:portalUsers,deals:portalDeals,spend:portalSpend,incentives:portalInc,
+    crmMembers:members,crmAgencies:agencies,crmCounter:agencyCounter
+  };
+  const repoURL='https://api.github.com/repos/'+ghCfg.repo+'/contents/'+(ghCfg.path||'data')+'/portal_data.json';
+  const hdrs={'Authorization':'token '+ghCfg.token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'};
+  try{
+    let sha=null;
+    try{const ex=await fetch(repoURL,{headers:hdrs});if(ex.ok)sha=(await ex.json()).sha}catch(e){}
+    const content=btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
+    const body={message:'[crm-sync] '+new Date().toISOString(),content,branch:ghCfg.branch||'main'};
+    if(sha)body.sha=sha;
+    await fetch(repoURL,{method:'PUT',headers:hdrs,body:JSON.stringify(body)});
+    toast('Saved & synced to GitHub');
+  }catch(e){/* silent — local save already succeeded */}
+}
+function refresh(){rStats();rMem();rTree();rGuide();populateAgentSelect();renderCalGrid()}
+
+// ═══════════════════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════════════════
+const ZE={rat:'🐀',ox:'🐂',tiger:'🐯',cat:'🐰',dragon:'🐲',snake:'🐍',horse:'🐴',goat:'🐑',monkey:'🐒',rooster:'🐓',dog:'🐕',pig:'🐷'};
+function ze(z){return ZE[z]||'?'}
+function avC(z){return{horse:'avG',dragon:'avP',rat:'avB',monkey:'avB',dog:'avG',tiger:'avG',ox:'avB',snake:'avB',rooster:'avB',cat:'avV',goat:'avV',pig:'avV'}[z]||'avK'}
+function cap(s){return s?s[0].toUpperCase()+s.slice(1):''}
+function fmtD(d){if(!d)return'';const[y,m,dy]=d.split('-');return MONTH_NAMES[parseInt(m)-1]+' '+parseInt(dy)+', '+y}
+function agN(id){return agencies[id]?.name||cap(id)}
+function agCol(id){return agencies[id]?.col||'#888'}
+function agBC(id){return agencies[id]?.bc2||'bk'}
+function signAg(sign){for(const[id,a]of Object.entries(agencies)){if(a.signs?.includes(sign))return id}return'cornerstone'}
+
+// ═══════════════════════════════════════════════════════════════════
+//  ADD RECRUIT
+// ═══════════════════════════════════════════════════════════════════
+function clrR(){document.getElementById('res-area').innerHTML='';document.getElementById('conf-card').style.display='none'}
+function clrF(){document.getElementById('in-name').value='';document.getElementById('in-dob').value='';clrR()}
+function cancelAdd(){pending=null;document.getElementById('conf-card').style.display='none'}
+
+function analyze(){
+  const name=document.getElementById('in-name').value.trim();
+  const dob=document.getElementById('in-dob').value;
+  if(!name||!dob){document.getElementById('res-area').innerHTML='<div class="info er">Please enter both a name and date of birth.</div>';return}
+  const zodiac=getZodiac(dob),lifePath=getLP(dob),dayEnergy=getDayE(dob);
+  const elem=getElement(dob),mSign=getMonthSign(dob);
+  const recruit={name,dob,zodiac,lifePath,dayEnergy,elem,mSign};
+  const agId=signAg(zodiac);
+  const candidates=members.filter(m=>m.dob).map(m=>{
+    const ab=m.agency===agId?4:-6;
+    return{member:m,score:Math.min(100,Math.max(0,tot(recruit,m)+ab))}
+  }).sort((a,b)=>b.score-a.score);
+  pending={...recruit,candidates,selectedUplineId:candidates[0]?.member?.id};
+
+  const traits=getMemberTraits({lifePath,zodiac,dob});
+  let html=`<div class="card"><div class="ct">Recruit Profile</div>
+    <div class="fl" style="gap:12px;margin-bottom:12px">
+      <div class="av ${avC(zodiac)}" style="width:44px;height:44px;font-size:18px">${ze(zodiac)}</div>
+      <div style="flex:1">
+        <div class="pn" style="font-size:16px">${name}</div>
+        <div class="pm">${fmtD(dob)}</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px">
+          <span class="badge bg">${elem} ${cap(zodiac)}</span>
+          <span class="badge bk">LP ${lifePath}</span>
+          <span class="badge bk">Day ${dayEnergy}</span>
+          <span class="badge bk">${cap(mSign)} 2nd sign</span>
+          <span class="badge ${agBC(agId)}">${agN(agId)}</span>
+        </div>
+        ${traits.special.length?`<div class="trait-list" style="margin-top:8px">${traits.special.map(s=>`<span class="badge ${s.cls}" title="${s.desc}">${s.label}</span>`).join('')}</div>`:''}
+      </div>
+    </div>
+    <div style="margin-top:8px"><div style="font-size:10px;color:var(--g3);letter-spacing:1px;margin-bottom:5px">PROS</div>
+      <div class="trait-list">${traits.pros.map(p=>`<span class="trait-pro">+ ${p}</span>`).join('')}</div></div>
+    <div style="margin-top:8px"><div style="font-size:10px;color:var(--g3);letter-spacing:1px;margin-bottom:5px">CONS</div>
+      <div class="trait-list">${traits.cons.map(p=>`<span class="trait-con">− ${p}</span>`).join('')}</div></div>
+    ${traits.special.length?`<div style="margin-top:10px">${traits.special.map(s=>`<div class="day-detail"><strong style="color:var(--g)">${s.label}:</strong> ${s.desc}</div>`).join('')}</div>`:''}
+    <hr class="divider">
+    <div class="ct" style="margin:10px 0">All Agents — Scroll to Compare</div>
+    <div class="scroll-list">`;
+  candidates.forEach((s,i)=>{
+    const m=s.member,sl=slbl(s.score);
+    const mfs=m.dob?fullSign(m.dob):cap(m.zodiac||'');
+    const mms=m.dob?getMonthSign(m.dob):'?';
+    html+=`<div class="sug ${i===0?'top':''}" id="sug-${m.id}" onclick="pickUp('${m.id}')">
+      <div class="fl" style="gap:8px;flex:1;min-width:0">
+        <div class="av ${avC(m.zodiac)}">${ze(m.zodiac)}</div>
+        <div style="min-width:0">
+          <div class="pn">${m.name} ${i===0?'<span style="color:#4caf85;font-size:9px;margin-left:4px">Best</span>':''}</div>
+          <div class="pm">${mfs} · LP${m.lifePath} · Day${m.dayEnergy} · ${cap(mms)} month</div>
+          <div class="pm">${agN(m.agency)} · ${m.role||''}</div>
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;min-width:75px">
+        <div class="${sl.c}" style="font-size:17px;font-weight:700">${s.score}%</div>
+        <div class="bw" style="margin-left:auto"><div class="bbar" style="width:${s.score}%;background:${bclr(s.score)}"></div></div>
+        <div style="font-size:9px;color:var(--d)">${sl.l}</div>
+      </div></div>`;
+  });
+  html+=`</div></div>`;
+  if(candidates[0])html+=`<div id="compat-area">${compatDetail(recruit,candidates[0].member)}</div>`;
+  document.getElementById('res-area').innerHTML=html;
+  if(candidates[0])showConf(candidates[0].member.id);
+}
+
+function pickUp(id){
+  pending.selectedUplineId=id;
+  document.querySelectorAll('.sug').forEach(el=>el.classList.remove('selected'));
+  const el=document.getElementById('sug-'+id);if(el)el.classList.add('selected');
+  const m=members.find(x=>x.id===id);
+  if(m&&pending){const ca=document.getElementById('compat-area');if(ca)ca.innerHTML=compatDetail(pending,m)}
+  showConf(id);
+}
+
+function showConf(uid){
+  const up=members.find(m=>m.id===uid);if(!up)return;
+  const r=pending,agId=signAg(r.zodiac),placed=up.agency||agId;
+  const sc=tot(r,up),sl=slbl(sc);
+  document.getElementById('conf-body').innerHTML=`
+    <div class="fl" style="flex-wrap:wrap;gap:12px">
+      <div class="fl" style="gap:8px">
+        <div class="av ${avC(r.zodiac)}">${ze(r.zodiac)}</div>
+        <div><div class="pn">${r.name}</div><div class="pm">${r.elem} ${cap(r.zodiac)} · LP${r.lifePath} · Day${r.dayEnergy}</div></div>
+      </div>
+      <div style="color:var(--d);align-self:center;font-size:20px">→</div>
+      <div class="fl" style="gap:8px">
+        <div class="av ${avC(up.zodiac)}">${ze(up.zodiac)}</div>
+        <div><div class="pn">${up.name}</div><div class="pm">${up.dob?fullSign(up.dob):cap(up.zodiac)} · ${agN(up.agency)}</div></div>
+      </div>
+      <div style="margin-left:auto;text-align:right">
+        <div class="${sl.c}" style="font-size:22px;font-weight:700">${sc}%</div>
+        <div class="pm">${sl.l} Match</div>
+      </div></div>
+    <div class="info" style="margin-top:10px">
+      Placing in: <strong>${agN(placed)}</strong> · Direct to: <strong>${up.name}</strong>
+    </div>`;
+  document.getElementById('conf-card').style.display='block';
+}
+
+function askConfirm(){
+  if(!pending?.selectedUplineId)return;
+  const up=members.find(m=>m.id===pending.selectedUplineId);
+  const sc=tot(pending,up),sl=slbl(sc);
+  document.getElementById('conf-full-body').innerHTML=`
+    Placing <strong style="color:var(--t)">${pending.name}</strong><br>
+    (${pending.elem} ${cap(pending.zodiac)} · LP${pending.lifePath} · Day${pending.dayEnergy})<br><br>
+    Direct to: <strong style="color:var(--t)">${up?.name||''}</strong><br>
+    (${up.dob?fullSign(up.dob):cap(up.zodiac)} · ${agN(up.agency)})<br><br>
+    Compatibility: <span class="${sl.c}" style="font-size:18px;font-weight:700">${sc}%</span> — ${sl.l}<br><br>
+    <span style="font-size:11px;color:var(--d)">This saves to your browser. Use Save HTML for sharing.</span>`;
+  document.getElementById('conf-full').classList.add('open');
+}
+function closeConf(){document.getElementById('conf-full').classList.remove('open')}
+
+function doAdd(){
+  closeConf();
+  if(!pending?.selectedUplineId)return;
+  pushHistory();
+  const r=pending,up=members.find(m=>m.id===r.selectedUplineId);
+  const ag=up?.agency||signAg(r.zodiac);
+  members.push({id:'m'+Date.now(),name:r.name,dob:r.dob,zodiac:r.zodiac,lifePath:r.lifePath,dayEnergy:r.dayEnergy,agency:ag,uplineId:r.selectedUplineId,role:'Member',commission:'',notes:'',addedAt:new Date().toISOString().split('T')[0],protected:false,isOwner:false});
+  saveAll();clrF();refresh();
+  document.getElementById('res-area').innerHTML=`<div class="info ok">✓ ${r.name} added under ${up?.name||''}.</div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  MEMBERS VIEW
+// ═══════════════════════════════════════════════════════════════════
+function rStats(){
+  const el=document.getElementById('sg');if(!el)return;
+  let h=`<div class="sc"><div class="sn">${members.length}</div><div class="slb2">Total Members</div></div>`;
+  Object.entries(agencies).forEach(([id,a])=>{
+    const cnt=members.filter(m=>m.agency===id).length;
+    h+=`<div class="sc"><div class="sn" style="color:${a.col}">${cnt}</div><div class="slb2" style="line-height:1.3">${a.name}</div></div>`;
+  });
+  el.innerHTML=h;
+}
+
+function rMem(){
+  const q=(document.getElementById('sq')?.value||'').toLowerCase();
+  let h='';
+  Object.entries(agencies).forEach(([aid,a])=>{
+    let list=members.filter(m=>m.agency===aid);
+    if(q)list=list.filter(m=>m.name.toLowerCase().includes(q)||m.zodiac?.includes(q)||a.name.toLowerCase().includes(q)||(m.dob&&fullSign(m.dob).toLowerCase().includes(q)));
+    if(!list.length)return;
+    h+=`<div class="sd"><div class="sl"></div>
+      <input class="et" value="${a.name}" onchange="renameAg('${aid}',this.value)" style="color:${a.col}" title="Click to rename">
+      <div class="sl"></div></div>`;
+    list.forEach(m=>{
+      const up=members.find(u=>u.id===m.uplineId);
+      const fs=m.dob?fullSign(m.dob):cap(m.zodiac||'?');
+      const ms=m.dob?getMonthSign(m.dob):'?';
+      const py=m.dob?getPersonalYear(m.dob):null;
+      const pm2=m.dob?getPersonalMonth(m.dob):null;
+      const traits=getMemberTraits(m);
+      h+=`<div class="mr">
+        <div class="fl" style="gap:10px;flex:1;min-width:0;align-items:flex-start">
+          <div class="av ${avC(m.zodiac)}" style="width:40px;height:40px;flex-shrink:0">${ze(m.zodiac)}</div>
+          <div style="min-width:0;flex:1">
+            <div class="pn">${m.name} ${m.isOwner?'<span style="color:var(--g);font-size:9px;margin-left:4px">Owner</span>':''} ${m.commission?`<span style="color:var(--d2);font-size:9px">· ${m.commission}%</span>`:''}</div>
+            <div class="pm">${fs} · LP${m.lifePath} · Day${m.dayEnergy} · ${cap(ms)} month</div>
+            <div class="pm">${up?'Under '+up.name+' ·':''} ${agN(aid)}</div>
+            ${py?`<div class="pm" style="color:var(--g3)">Personal Year ${py} · Personal Month ${pm2}</div>`:''}
+            ${traits.special.length?`<div class="trait-list" style="margin-top:5px">${traits.special.map(s=>`<span class="badge ${s.cls}" title="${s.desc}" style="font-size:8px">${s.label}</span>`).join('')}</div>`:''}
+            ${traits.pros.length?`<div class="trait-list" style="margin-top:5px">${traits.pros.slice(0,5).map(p=>`<span class="trait-pro">+${p}</span>`).join('')}</div>`:''}
+            ${traits.cons.length?`<div class="trait-list" style="margin-top:3px">${traits.cons.slice(0,4).map(p=>`<span class="trait-con">−${p}</span>`).join('')}</div>`:''}
+            ${m.notes?`<div class="pm" style="margin-top:3px;color:var(--d)">${m.notes}</div>`:''}
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0">
+          <span class="badge ${agBC(aid)}">${a.name}</span>
+          <div style="display:flex;gap:5px">
+            <button class="btn sm" onclick="openEdit('${m.id}')">Edit</button>
+            ${!m.protected?`<button class="btn sm dan" onclick="openDel('${m.id}')">Remove</button>`:''}
+          </div></div></div>`;
+    });
+  });
+  document.getElementById('ml').innerHTML=h||'<div style="text-align:center;padding:24px;color:var(--d)">No members found.</div>';
+}
+
+function renameAg(id,val){
+  if(!agencies[id])return;
+  pushHistory();
+  agencies[id].name=val.trim()||agencies[id].name;
+  saveAll();refresh();
+}
+
+function setAgencyFounding(aid,dob){
+  if(!agencies[aid])return;
+  pushHistory();
+  agencies[aid].foundingDob=dob;
+  saveAll();refresh();
+  if(dob){
+    const lp=getLP(dob);const el=getElement(dob);const z=getZodiac(dob);
+    toast(`${agencies[aid].name} founding: ${el} ${cap(z)} · LP${lp}`);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  EDIT MODAL
+// ═══════════════════════════════════════════════════════════════════
+function openEdit(id){
+  const m=members.find(x=>x.id===id);if(!m)return;editId=id;
+  const agOpts=Object.entries(agencies).map(([k,a])=>`<option value="${k}"${k===m.agency?' selected':''}>${a.name}</option>`).join('');
+  let upOpts=`<option value=""${!m.uplineId?' selected':''}>Owner / Cornerstone top</option>`;
+  members.filter(x=>x.id!==id).forEach(x=>{upOpts+=`<option value="${x.id}"${x.id===m.uplineId?' selected':''}>${x.name}</option>`});
+  document.getElementById('edit-title').textContent='Edit — '+m.name;
+  document.getElementById('edit-body').innerHTML=`
+    <div class="fr2">
+      <div class="fg"><label>Full Name</label><input id="e-name" value="${m.name}"></div>
+      <div class="fg"><label>Date of Birth</label><input type="date" id="e-dob" value="${m.dob||''}"></div>
+    </div>
+    <div class="fr2">
+      <div class="fg"><label>Role / Title</label><input id="e-role" value="${m.role||''}"></div>
+      <div class="fg"><label>Agency</label><select id="e-ag">${agOpts}</select></div>
+    </div>
+    <div class="fg"><label>Direct Upline</label><select id="e-up">${upOpts}</select>
+      <div style="font-size:10px;color:var(--d);margin-top:3px">Selecting "Owner / Cornerstone top" creates a new agency if their current one already has an owner. Their downline follows.</div>
+    </div>
+    <div class="fg"><label>Commission % (optional)</label><input id="e-comm" value="${m.commission||''}" placeholder="e.g. 25 or 30/20"></div>
+    <div class="fg"><label>Notes</label><textarea id="e-notes" rows="3">${m.notes||''}</textarea></div>`;
+  document.getElementById('edit-ov').classList.add('open');
+}
+
+function saveEdit(){
+  const m=members.find(x=>x.id===editId);if(!m)return;
+  pushHistory();
+  const dob=document.getElementById('e-dob').value;
+  m.name=document.getElementById('e-name').value.trim()||m.name;
+  m.dob=dob;
+  if(dob){m.zodiac=getZodiac(dob);m.lifePath=getLP(dob);m.dayEnergy=getDayE(dob)}
+  m.role=document.getElementById('e-role').value;
+  m.commission=document.getElementById('e-comm').value.trim();
+  const upVal=document.getElementById('e-up').value;
+  m.uplineId=upVal||null;
+  m.agency=document.getElementById('e-ag').value;
+  m.notes=document.getElementById('e-notes').value;
+
+  if(!upVal){
+    m.isOwner=true;
+    handleOwnerPromotion(m);
+  }else{
+    m.isOwner=false;
+  }
+  saveAll();closeOv('edit-ov');refresh();
+  toast('Saved');
+}
+
+function handleOwnerPromotion(m){
+  const existingOwner=members.find(x=>x.id!==m.id&&x.isOwner&&x.agency===m.agency);
+  if(!existingOwner)return;
+  const newId='agency'+agencyCounter;
+  const colOptions=['#ff8a65','#ce93d8','#80cbc4','#ffb74d','#81c784','#ef9a9a','#80deea','#ffe082','#b39ddb','#a5d6a7','#90caf9','#f48fb1'];
+  agencies[newId]={
+    name:'Agency '+agencyCounter,
+    signs:[],
+    col:colOptions[(agencyCounter-5)%colOptions.length],
+    bc2:'bk',
+    trineId:null
+  };
+  agencyCounter++;
+  function moveDescendants(personId){
+    members.forEach(x=>{
+      if(x.uplineId===personId){
+        x.agency=newId;
+        moveDescendants(x.id);
+      }
+    });
+  }
+  m.agency=newId;
+  moveDescendants(m.id);
+  toast('New agency created — '+agencies[newId].name);
+}
+
+function openDel(id){
+  const m=members.find(x=>x.id===id);if(!m)return;delId=id;
+  const dl=members.filter(x=>x.uplineId===id);
+  document.getElementById('del-body').innerHTML=`Remove <strong style="color:var(--t)">${m.name}</strong> from the hierarchy?${dl.length?`<br><br><span style="color:#e57373;">⚠ ${dl.length} downline member(s) will be moved up to their grandparent.</span>`:''}`;
+  document.getElementById('del-ov').classList.add('open');
+}
+document.getElementById('del-btn').onclick=function(){
+  if(!delId)return;
+  pushHistory();
+  const m=members.find(x=>x.id===delId);
+  members.forEach(x=>{if(x.uplineId===delId)x.uplineId=m.uplineId});
+  members=members.filter(x=>x.id!==delId);
+  saveAll();closeOv('del-ov');refresh();
+  toast('Removed');
+};
+function closeOv(id){document.getElementById(id).classList.remove('open')}
+['edit-ov','del-ov'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',function(e){if(e.target===this)closeOv(id)});
+});
+
+// ═══════════════════════════════════════════════════════════════════
+//  FAMILY TREE
+// ═══════════════════════════════════════════════════════════════════
+function rTree(){
+  function buildNode(m){
+    const ch=members.filter(x=>x.uplineId===m.id);
+    const col=agCol(m.agency);
+    const isO=m.isOwner||!m.uplineId;
+    const fs=m.dob?`${getElement(m.dob)} ${cap(m.zodiac)}`:cap(m.zodiac||'?');
+    const ms=m.dob?getMonthSign(m.dob):'?';
+    let html=`<div class="t-branch">
+      <div class="t-node ${isO?'owner':''}" style="border-color:${col}${isO?'':'33'}" onclick="openEdit('${m.id}')">
+        <div class="t-avar ${avC(m.zodiac)}">${ze(m.zodiac)}</div>
+        <div class="t-nm" style="color:${isO?col:'var(--t)'}">${m.name}</div>
+        <div class="t-sub">${fs}</div>
+        <div class="t-sub">LP${m.lifePath}·D${m.dayEnergy}·${cap(ms).slice(0,3)}</div>
+        ${m.dob?`<div class="t-sub">${fmtD(m.dob)}</div>`:''}
+        ${m.commission?`<div class="t-sub" style="color:var(--g3)">${m.commission}%</div>`:''}
+      </div>`;
+    if(ch.length){html+=`<div class="vl"></div><div class="t-ch">`;ch.forEach(c=>html+=buildNode(c));html+=`</div>`}
+    return html+`</div>`;
+  }
+  let h=`<div style="display:flex;gap:18px;justify-content:flex-start;flex-wrap:nowrap;align-items:flex-start">`;
+  Object.entries(agencies).forEach(([aid,a])=>{
+    const owner=members.find(m=>(m.isOwner||!m.uplineId)&&m.agency===aid);
+    if(!owner)return;
+    h+=`<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+      <input class="et" value="${a.name}"
+        onchange="renameAg('${aid}',this.value)"
+        style="color:${a.col};border:1px solid ${a.col}33;border-radius:5px;padding:3px 12px;margin-bottom:3px;text-align:center;background:transparent;font-family:'Georgia',serif;outline:none;min-width:100px;font-size:10px;cursor:text"
+        onfocus="this.style.borderColor='${a.col}'" onblur="this.style.borderColor='${a.col}33'">
+      <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px">
+        <input type="date" value="${a.foundingDob||''}"
+          onchange="setAgencyFounding('${aid}',this.value)"
+          style="background:transparent;border:none;border-bottom:1px dashed ${a.col}55;color:${a.col};font-size:9px;font-family:'Georgia',serif;outline:none;cursor:text;max-width:110px;text-align:center"
+          title="Agency founding date — sets LP, element, signs">
+        ${a.foundingDob?`<span style="font-size:8px;color:${a.col}99">LP${getLP(a.foundingDob)}</span>`:''}
+      </div>
+      ${buildNode(owner)}</div>`;
+  });
+  h+=`</div>`;
+  document.getElementById('tree-area').innerHTML=h;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  GUIDE
+// ═══════════════════════════════════════════════════════════════════
+const TRINES=[
+  {id:'t1',signs:['rat','dragon','monkey'],clashes:{rat:'horse',dragon:'dog',monkey:'tiger'},col:'#b39ddb',bc:'rgba(123,94,167,.35)',
+   desc:'First Trine — The Doers. Masters of action, charisma, large-scale leadership. They initiate, adapt, magnetize.',
+   signDescs:{rat:'Rat: Quick-thinking, resourceful, charming. Reads rooms expertly and finds angles.',dragon:'Dragon: Magnetic, larger-than-life, fearlessly confident. Natural commander.',monkey:'Monkey: The most versatile and clever sign. Adaptable, strategic, witty.'}},
+  {id:'t2',signs:['ox','snake','rooster'],clashes:{ox:'goat',snake:'pig',rooster:'cat'},col:'#80cbc4',bc:'rgba(90,143,163,.35)',
+   desc:'Second Trine — The Builders. Patient, disciplined, precise. They create systems that last.',
+   signDescs:{ox:'Ox: The most reliable sign. Steadfast, hardworking, slow to anger.',snake:'Snake: Deep, intuitive, strategic. Sees behind the curtain.',rooster:'Rooster: Detail-oriented, honest to a fault, perfectionist.'}},
+  {id:'t3',signs:['tiger','horse','dog'],clashes:{tiger:'monkey',horse:'rat',dog:'dragon'},col:'#c9a84c',bc:'rgba(201,168,76,.35)',
+   desc:'Third Trine — The Warriors. Brave, passionate, loyal. They lead by example.',
+   signDescs:{tiger:'Tiger: Fearless, magnetic, courageous. Born to lead and challenge.',horse:'Horse: The REBEL of the zodiac. Freedom-loving, enthusiastic, quick. Thrives in movement, dies in stagnation.',dog:'Dog: The most loyal sign. Honest, protective, quietly fierce.'}},
+  {id:'t4',signs:['cat','goat','pig'],clashes:{cat:'rooster',goat:'ox',pig:'snake'},col:'#81c784',bc:'rgba(39,174,96,.3)',
+   desc:'Fourth Trine — The Creators. Empathetic, artistic, deeply perceptive. They create belonging.',
+   signDescs:{cat:'Rabbit: Diplomatic, graceful, quietly intelligent.',goat:'Goat: Creative, gentle, emotionally perceptive.',pig:'Pig: The most generous sign. Warm, trusting, sincere.'}},
+];
+
+const ELEM_DESCS={
+  Wood:'Wood energy is growth, expansion, and vision. Wood people are idealistic, creative, driven by the desire to build something meaningful.',
+  Fire:'Fire energy is passion, boldness, charisma. Fire people are magnetic, expressive, natural closers.',
+  Earth:'Earth energy is stability, patience, reliability. Earth people are the bedrock of any team.',
+  Metal:'Metal energy is precision, discipline, strength. Metal people cut through noise, set high standards.',
+  Water:'Water energy is intuition, wisdom, flow. Water people read between the lines.',
+};
+
+function lpDesc(lp){const d={1:'Leader — independent, pioneering, self-reliant.',2:'Diplomat — cooperative, intuitive, sensitive to group dynamics.',3:'Communicator — expressive, creative, socially magnetic.',4:'Builder — disciplined, methodical, never burns out.',5:'Explorer — freedom-seeking, versatile, energetic.',6:'Nurturer — responsible, community-driven, protective.',7:'Seeker — analytical, intuitive, the genius mind.',8:'Executive — ambitious, authoritative, money magnet.',9:'Humanitarian — compassionate, wise, sees the broad picture.',11:'Illuminator — master intuitive, idealistic visionary.',22:'Master Builder — combines LP4 practicality with LP11 vision.',33:'Master Teacher — embodied compassion, the rarest path.'};return d[lp]||'LP'+lp}
+function dayEDesc(n){const d={1:'initiation and leadership impulse',2:'partnership and sensitivity',3:'expression and creativity',4:'structure and discipline',5:'freedom and change',6:'harmony and responsibility',7:'reflection and depth',8:'power and ambition',9:'completion and compassion'};return d[n]||'Day '+n+' energy'}
+function pyDesc(py){const d={1:'New beginning — plant seeds, launch',2:'Cooperation — build relationships',3:'Expression — create, expand',4:'Foundation — grind, build structure',5:'Change — embrace movement',6:'Responsibility — family, team',7:'Reflection — retreat, study',8:'Power — execute, harvest',9:'Completion — release the old',11:'Illumination — heightened intuition',22:'Master building — biggest year for projects',33:'Master teaching — serve, uplift'};return d[py]||'Year '+py}
+
+function rGuide(){
+  let h='';
+
+  h+=`<div class="card"><div class="ct">The Four Trines — Signs &amp; Compatibilities</div>`;
+  TRINES.forEach(t=>{
+    const agId=Object.keys(agencies).find(k=>agencies[k].trineId===t.id);
+    const agName=agId?agencies[agId].name:'';
+    h+=`<div class="tc" style="border-color:${t.bc}">
+      <div class="tt" style="color:${t.col}">${t.signs.map(s=>`${ze(s)} ${cap(s)}`).join(' · ')}
+        ${agName?`<span class="badge" style="color:${t.col};background:${t.bc};border-color:${t.bc}">${agName}</span>`:''}</div>
+      <div style="font-size:12px;color:var(--d2);line-height:1.8;margin-bottom:10px">${t.desc}</div>
+      <div style="display:grid;gap:8px;margin-bottom:10px">`;
+    Object.entries(t.signDescs).forEach(([s,desc])=>{
+      h+=`<div class="guide-section"><h4>${ze(s)} ${cap(s)}</h4><div style="font-size:11px;color:var(--d2);line-height:1.7">${desc}</div></div>`;
+    });
+    h+=`</div><div style="display:flex;flex-wrap:wrap;gap:12px">
+      <div><div style="font-size:9px;color:var(--d);letter-spacing:1px;margin-bottom:5px">WITHIN-TRINE HARMONY</div>
+        ${t.signs.map(s=>`<div class="cp2">${ze(s)} ${cap(s)} — trine ally</div>`).join('')}</div>
+      <div><div style="font-size:9px;color:var(--d);letter-spacing:1px;margin-bottom:5px">CLASH PAIRS</div>
+        ${Object.entries(t.clashes).map(([s,e])=>`<div class="ep">${ze(s)} ${cap(s)} vs ${ze(e)} ${cap(e)}</div>`).join('')}</div>
+    </div></div>`;
+  });
+  h+=`</div>`;
+
+  // Element + Sign combinations
+  h+=`<div class="card"><div class="ct">The Five Elements + Sign Combinations</div>
+    <div style="margin-bottom:12px;font-size:12px;color:var(--d2);line-height:1.8">Each year carries an element on a 10-year cycle (2 years per element). The element modifies the base sign — a <strong style="color:var(--t)">Wood Horse</strong> is a Horse filtered through growth and idealism, an <strong style="color:var(--t)">Earth Horse</strong> is one filtered through practicality. Same blueprint, different materials.</div>`;
+  Object.entries(ELEM_DESCS).forEach(([el,desc])=>{
+    const agentsWithEl=members.filter(m=>m.dob&&getElement(m.dob)===el);
+    h+=`<div class="guide-section"><h4>${el}</h4><div style="font-size:11px;color:var(--d2);line-height:1.8">${desc}</div>`;
+    if(agentsWithEl.length){
+      h+=`<div style="margin-top:6px;font-size:11px;color:var(--g3)">Your team: ${agentsWithEl.map(m=>`<strong style="color:var(--t)">${m.name}</strong> (${el} ${cap(m.zodiac)})`).join(', ')}</div>`;
+    }
+    h+=`</div>`;
+  });
+  h+=`<div style="margin-top:12px"><div style="font-size:10px;color:var(--g);letter-spacing:1px;margin-bottom:8px">EXAMPLE COMBINATIONS</div>
+    <div class="guide-section"><h4>Water Horse</h4><div style="font-size:11px;color:var(--d2);line-height:1.7">Joshua and Tyrese are both Water Horses (2002). Combines Horse rebellion with Water's deep emotional intelligence. Reads people exceptionally well, leads through inspiration rather than force.</div></div>
+    <div class="guide-section"><h4>Earth Horse</h4><div style="font-size:11px;color:var(--d2);line-height:1.7">Quincy Farley is an Earth Horse (1978). Standard Horse independence and rebellion, but with stability and patience layered in. The Horse who actually follows through on what they start.</div></div>
+    <div class="guide-section"><h4>Metal Dragon</h4><div style="font-size:11px;color:var(--d2);line-height:1.7">Elijah Mang is a Metal Dragon (2000). The most disciplined Dragon. Standard Dragon command and magnetism plus Metal's precision and high standards. CFO/operator type.</div></div>
+    <div class="guide-section"><h4>Wood Rooster</h4><div style="font-size:11px;color:var(--d2);line-height:1.7">Max is a Wood Rooster (2005). Standard Rooster precision softened by Wood's growth orientation. More collaborative than Metal Roosters.</div></div>
+    <div class="guide-section"><h4>Fire Pig</h4><div style="font-size:11px;color:var(--d2);line-height:1.7">Emily Cribb is a Fire Pig (2007). Standard Pig generosity amplified with Fire's expressive heat. Natural community builder with magnetic warmth.</div></div>
+  </div></div>`;
+
+  // HIDDEN NUMBERS
+  h+=`<div class="card"><div class="ct">The Hidden Numbers — Master, Money, Genius, Karmic</div>
+    <div style="font-size:12px;color:var(--d2);line-height:1.9;margin-bottom:14px">Mainstream numerology only shows the final reduced number — but the <strong style="color:var(--t)">unreduced sums</strong> and the numbers a person carries in their birth date are where the real reading lives. A 16/7 is not the same as a 25/7. Both are 7s, but 16/7 carries Rebirth energy and karmic depth that 25/7 does not.</div>`;
+
+  h+=`<div class="guide-section"><h4>Master Numbers — 11, 22, 33</h4>
+    <div style="font-size:11px;color:var(--d2);line-height:1.8">These never reduce. They carry double the vibration of their root number plus elevated spiritual frequency.<br><br>
+      <strong style="color:#ffd54f">11 — Master Illuminator</strong>: heightened intuition, idealistic visionary. Channels insight others can't see. Risk: anxiety, sensory overload.<br>
+      <strong style="color:#ffd54f">22 — Master Builder</strong>: combines LP4 discipline with LP11 vision. Capable of building empires. Risk: pressure cooker, perfectionism.<br>
+      <strong style="color:#ffd54f">33 — Master Teacher</strong>: the rarest path. Embodied compassion, healer. Risk: self-sacrifice to extreme.
+    </div>
+    ${members.filter(m=>m.dob&&detectSpecial(m.dob).find(s=>s.cls==='b-master')).map(m=>{
+      const tags=detectSpecial(m.dob).filter(s=>s.cls==='b-master');
+      return`<div style="margin-top:8px;font-size:11px;color:var(--g3)"><strong style="color:var(--t)">${m.name}</strong> carries: ${tags.map(t=>t.label).join(', ')}</div>`;
+    }).join('')||'<div style="margin-top:8px;font-size:11px;color:var(--d)">No team members currently carry master numbers.</div>'}
+  </div>`;
+
+  h+=`<div class="guide-section"><h4>Money Numbers — 8, 17, 26, 28, 35, 44, 53...</h4>
+    <div style="font-size:11px;color:var(--d2);line-height:1.8">All numbers reducing to 8 carry the wealth/material-mastery vibration. Birth date or LP touching these numbers indicates natural ability to attract resources.<br><br>
+      <strong style="color:#81c784">8</strong> — pure money magnet, executive presence, business mind.<br>
+      <strong style="color:#81c784">17/8</strong> — spiritual money, wealth aligned with higher purpose.<br>
+      <strong style="color:#81c784">26/8</strong> — collaborative wealth, money built with partners.<br>
+      <strong style="color:#81c784">28/1</strong> — the magnetic money number. Reduces to 1 (leader) but carries 8 (wealth) underneath. Entrepreneur energy.<br>
+      <strong style="color:#81c784">Quincy Farley — LP 8, Birth Day 1, Earth Horse (1978).</strong> One of the most powerful money-leader combinations in the system. LP 8 is the executive money vibration. Day 1 is the pioneer driver. Earth Horse is the rebel who follows through. His entire chart is built around wealth accumulation through disciplined, independent action. LP chain: 10/1/1978 → 1+0+1+1+9+7+8 = 27 → 2+7 = <strong>9</strong> (humanitarian completor) with 8 as the deep carrier in his day and birth month. He accumulates by serving at scale.<br>
+      <strong style="color:#81c784">35/8, 44/8, 53/8</strong> — same 8 vibration through different paths.
+    </div>
+    ${members.filter(m=>m.dob&&detectSpecial(m.dob).find(s=>s.cls==='b-money')).map(m=>{
+      const tags=detectSpecial(m.dob).filter(s=>s.cls==='b-money');
+      return`<div style="margin-top:8px;font-size:11px;color:var(--g3)"><strong style="color:var(--t)">${m.name}</strong>: ${tags.map(t=>t.label).join(', ')}</div>`;
+    }).join('')||''}
+  </div>`;
+
+  h+=`<div class="guide-section"><h4>Genius Numbers — 7, 16, 25, 34, 43...</h4>
+    <div style="font-size:11px;color:var(--d2);line-height:1.8">All numbers reducing to 7 carry the seeker/scholar/genius vibration.<br><br>
+      <strong style="color:#b39ddb">7</strong> — pure genius mind, deep thinker, scholar/seeker.<br>
+      <strong style="color:#b39ddb">16/7 — Rebirth Energy</strong>: most powerful AND most dangerous of the genius numbers. 16 carries destructive-rebirth frequency — what must fall, falls so truth can rise. Exceptional intuition forged through hardship. Karmic — must beware pride and isolation. Joshua's birth date 09/21/2002 sums to 16 → 7. He is a 16/7 — genius mind built through depth.<br>
+      <strong style="color:#b39ddb">25/7</strong> — wisdom through experience. Pure scholarly mind without 16's karmic weight. Most balanced 7.<br>
+      <strong style="color:#b39ddb">34/7, 43/7</strong> — methodical genius (34) and creative genius (43).
+    </div>
+    ${members.filter(m=>m.dob&&detectSpecial(m.dob).find(s=>s.cls==='b-genius')).map(m=>{
+      const tags=detectSpecial(m.dob).filter(s=>s.cls==='b-genius');
+      return`<div style="margin-top:8px;font-size:11px;color:var(--g3)"><strong style="color:var(--t)">${m.name}</strong>: ${tags.map(t=>t.label).join(', ')}</div>`;
+    }).join('')||''}
+  </div>`;
+
+  h+=`<div class="guide-section"><h4>Leader Numbers — 1, 10, 19, 28, 37, 46...</h4>
+    <div style="font-size:11px;color:var(--d2);line-height:1.8">Numbers reducing to 1 carry pioneering, self-starter, leader energy.<br><br>
+      <strong style="color:#ff8a65">1</strong> — pure leader, independent, pioneering.<br>
+      <strong style="color:#ff8a65">10/1</strong> — completed-cycle leadership, fresh-start specialist.<br>
+      <strong style="color:#ff8a65">19/1 — Karmic Leader</strong>: must overcome past-life abuse-of-power issues. Tested through fire.<br>
+      <strong style="color:#ff8a65">28/1</strong> — entrepreneur magnetic leader (also money carrier).
+    </div>
+  </div>`;
+
+  h+=`<div class="guide-section"><h4>Karmic Debt Numbers — 13, 14, 16, 19</h4>
+    <div style="font-size:11px;color:var(--d2);line-height:1.8">Specific lessons that must be overcome in this lifetime.<br><br>
+      <strong style="color:#ef9a9a">13/4</strong> — must overcome shortcuts and laziness. Hard work and integrity bring rewards.<br>
+      <strong style="color:#ef9a9a">14/5</strong> — must overcome excess. Discipline within freedom.<br>
+      <strong style="color:#ef9a9a">16/7</strong> — Rebirth energy. Beware pride and isolation.<br>
+      <strong style="color:#ef9a9a">19/1</strong> — must overcome ego abuse. Lead through service.
+    </div>
+  </div></div>`;
+
+  // PERSONAL YEAR — corrected formula
+  h+=`<div class="card"><div class="ct">Personal Year &amp; Personal Month — The Real Formula</div>
+    <div style="font-size:12px;color:var(--d2);line-height:1.9">
+      <strong style="color:#e57373">The mainstream formula is wrong.</strong> Most numerology sites tell you Personal Year activates on January 1. It does not.<br><br>
+      <strong style="color:var(--t)">The real formula:</strong> Personal Year activates on your <em>most recent passed birthday</em>. Until your next birthday, you stay in that year.<br><br>
+      <strong style="color:var(--t)">Calculation:</strong> reduce (birth month + birth day + most-recent-birthday year digits).<br><br>
+      <strong style="color:var(--t)">Example — Joshua Cribb, born Sep 21 2002:</strong> Today (April 27, 2026), his last passed birthday was Sept 21, <strong>2025</strong>. So we use 2025: 9 + 21 + (2+0+2+5) = 9 + 21 + 9 = 39 → 3+9 = 12 → 1+2 = <strong style="color:var(--g)">3</strong>. Personal Year 3.<br><br>
+      <strong style="color:var(--t)">Personal Month:</strong> reduce (Personal Year + current calendar month).<br>
+      Joshua in April 2026: 3 + 4 = <strong style="color:var(--g)">7</strong>. Personal Month 7.<br><br>
+      <strong style="color:var(--t)">Why this matters:</strong> Personal cycles tell you what season of life someone is in. A recruit in PY 1 is in a fresh start (ideal for commitment). A recruit in PY 9 is releasing old patterns — they may be transformative or distracted.<br><br>
+      <strong style="color:var(--t)">Current Team Personal Cycles (live):</strong>`;
+  members.filter(m=>m.dob).forEach(m=>{
+    const py=getPersonalYear(m.dob);
+    const pm2=getPersonalMonth(m.dob);
+    h+=`<div style="background:var(--p3);border:1px solid var(--b);border-radius:6px;padding:8px 12px;font-size:11px;margin-top:6px">
+      <strong style="color:var(--t)">${m.name}</strong> — Personal Year <span style="color:var(--g);font-weight:700">${py}</span> · Personal Month <span style="color:var(--g);font-weight:700">${pm2}</span>
+      <span style="color:var(--d2);margin-left:6px">(${pyDesc(py)})</span></div>`;
+  });
+  h+=`</div></div>`;
+
+  // SECONDARY MONTH SIGN
+  h+=`<div class="card"><div class="ct">Secondary Month Sign — The Day-7 Rule</div>
+    <div style="font-size:12px;color:var(--d2);line-height:1.9">
+      The secondary sign is determined by birth month, with one critical rule: <strong style="color:var(--t)">if birth day is before the 7th, the energy belongs to the previous month's sign.</strong> On the 7th or later, the current month's sign applies.<br><br>
+      Month sequence: Jan=Ox, Feb=Tiger, Mar=Rabbit, Apr=Dragon, May=Snake, Jun=Horse, Jul=Goat, Aug=Monkey, Sep=Rooster, Oct=Dog, Nov=Pig, Dec=Rat.<br><br>
+      <strong style="color:var(--t)">Tyrese Williams</strong> (Aug 4): day 4 is before the 7th, so we use July's sign — <strong>Goat</strong>. Full reading: Horse · Goat.<br>
+      <strong style="color:var(--t)">Joshua Cribb</strong> (Sep 21): day 21 is past the 7th, so we use September's sign — <strong>Rooster</strong>. Full reading: Horse · Rooster.<br><br>
+      The month sign is the social and relational layer — how someone shows up in teams, conversations, first impressions.
+    </div></div>`;
+
+  // STORAGE
+  h+=`<div class="card" style="border-color:rgba(192,57,43,.3)"><div class="ct" style="color:#e57373">Storage &amp; Multi-Device Sync</div>
+    <div style="font-size:12px;color:var(--d2);line-height:1.9">
+      This CRM uses <strong style="color:var(--t)">localStorage</strong> — data is saved in your browser on this device only. Survives reloads but does NOT auto-sync across devices.<br><br>
+      <strong style="color:var(--g)">To share data across all devices:</strong><br>
+      1. Click <strong style="color:var(--t)">"Save HTML"</strong> in the top right. Downloads the entire CRM with all data baked in.<br>
+      2. Upload to <strong style="color:var(--t)">GitHub Pages</strong> (free) or any web host.<br>
+      3. After major updates, the admin re-saves and re-uploads.<br><br>
+      <strong style="color:var(--t)">Tip:</strong> Use Undo/Redo (top right or Ctrl+Z / Ctrl+Shift+Z) to safely experiment.
+    </div></div>`;
+
+  // AGENCY FOUNDING DATES
+  h+=`<div class="card"><div class="ct">Agency Numerology — Founding Dates</div>
+    <div style="font-size:12px;color:var(--d2);line-height:1.9;margin-bottom:14px">Each agency carries its own numerological identity based on its founding date — a Life Path, Personal Year, element, and zodiac sign. Enter the founding date in the <strong style="color:var(--t)">Family Tree</strong> view under each agency name to activate this reading.</div>`;
+  Object.entries(agencies).forEach(([aid,a])=>{
+    if(a.foundingDob){
+      const lp=getLP(a.foundingDob);const el=getElement(a.foundingDob);
+      const z=getZodiac(a.foundingDob);const ms=getMonthSign(a.foundingDob);
+      const py=getPersonalYear(a.foundingDob);const pm2=getPersonalMonth(a.foundingDob);
+      const chain=getLPChain(a.foundingDob);
+      const special=detectSpecial(a.foundingDob);
+      h+=`<div class="guide-section"><h4 style="color:${a.col}">${a.name}</h4>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+          <span class="badge" style="color:${a.col};background:transparent;border-color:${a.col}44">${el} ${cap(z)}</span>
+          <span class="badge bk">LP${lp}</span>
+          <span class="badge bk">${cap(ms)} month sign</span>
+          <span class="badge bk">Personal Year ${py} · PM ${pm2}</span>
+          ${special.map(s=>`<span class="badge ${s.cls}">${s.label}</span>`).join('')}
+        </div>
+        <div style="font-size:11px;color:var(--d2);line-height:1.8">
+          Founded: <strong style="color:var(--t)">${fmtD(a.foundingDob)}</strong><br>
+          ${lpDesc(lp)}<br>
+          Personal Year ${py}: ${pyDesc(py)}.
+        </div></div>`;
+    }else{
+      h+=`<div class="guide-section"><h4 style="color:${a.col}">${a.name}</h4>
+        <div style="font-size:11px;color:var(--d)">No founding date entered. Set it in the Family Tree view under the agency name.</div></div>`;
+    }
+  });
+  h+=`</div>`;
+
+  document.getElementById('guide-content').innerHTML=h;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  CALENDAR
+// ═══════════════════════════════════════════════════════════════════
+function populateAgentSelect(){
+  const sel=document.getElementById('cal-agent');
+  if(!sel)return;
+  const cur=sel.value;
+  sel.innerHTML=`<option value="">All agents (general)</option>`+
+    members.filter(m=>m.dob).map(m=>`<option value="${m.id}"${m.id===cur?' selected':''}>${m.name}</option>`).join('');
+}
+
+function calcDay(){
+  const dob=document.getElementById('cal-date').value;
+  if(!dob){document.getElementById('cal-result').innerHTML='';renderCalAgents('');return}
+  const d=new Date(dob+'T12:00:00');
+  const zodiac=getZodiac(dob),lp=getLP(dob),de=getDayE(dob);
+  const elem=getElement(dob),mSign=getMonthSign(dob);
+  const chain=getLPChain(dob);
+  const dayNum=d.getDate();
+  const special=detectSpecial(dob);
+  const refNow=new Date();
+  const py=getPersonalYear(dob,refNow);
+  const pm2=getPersonalMonth(dob,refNow);
+  const isFuture=dob>refNow.toISOString().split('T')[0];
+  const isToday=dob===refNow.toISOString().split('T')[0];
+  const mZodName=MONTH_NAMES[d.getMonth()];
+
+  const allD=[...String(d.getMonth()+1).padStart(2,'0').split('').map(Number),...String(d.getDate()).padStart(2,'0').split('').map(Number),...String(d.getFullYear()).split('').map(Number)];
+  const lpStepsArr=[allD.join(' + ')+' = '+allD.reduce((a,b)=>a+b,0)];
+  let r=allD.reduce((a,b)=>a+b,0);
+  while(r>9&&![11,22,33].includes(r)){const pts=r.toString().split('').map(Number);const nx=pts.reduce((a,b)=>a+b,0);lpStepsArr.push(pts.join(' + ')+' = '+nx);r=nx}
+  const lpSteps=lpStepsArr.join(' → ');
+
+  const dayE=dayNum;let deRun=dayE,deSteps=String(dayE);
+  while(deRun>9){const pts=deRun.toString().split('').map(Number);const nx=pts.reduce((a,b)=>a+b,0);deSteps+=' → '+pts.join(' + ')+' = '+nx;deRun=nx}
+
+  calYear=d.getFullYear();calMonth=d.getMonth();
+
+  document.getElementById('cal-result').innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px">
+      <div class="sc"><div class="sn" style="font-size:16px">${ze(zodiac)}</div><div style="font-size:10px;color:var(--g);font-weight:700">${elem} ${cap(zodiac)}</div><div class="slb2">Year Sign</div></div>
+      <div class="sc"><div class="sn" style="font-size:16px">${ze(mSign)}</div><div style="font-size:10px;color:var(--d2)">${cap(mSign)}</div><div class="slb2">Month / 2nd Sign</div></div>
+      <div class="sc"><div class="sn">${lp}</div><div class="slb2">Life Path</div></div>
+      <div class="sc"><div class="sn">${de}</div><div class="slb2">Day Energy</div></div>
+      <div class="sc"><div class="sn" style="font-size:18px">${py}</div><div class="slb2">Personal Year*</div></div>
+      <div class="sc"><div class="sn" style="font-size:18px">${pm2}</div><div class="slb2">Personal Month*</div></div>
+    </div>
+    ${special.length?`<div class="trait-list" style="margin-bottom:10px">${special.map(s=>`<span class="badge ${s.cls}" title="${s.desc}">${s.label}</span>`).join('')}</div>`:''}
+    <div class="info">
+      <strong>Date:</strong> ${fmtD(dob)} ${isToday?'— Today':isFuture?'— Future':'— Past'}<br><br>
+      <strong>Year Sign — ${elem} ${cap(zodiac)}</strong><br>
+      ${ELEM_DESCS[elem]||''} ${TRINES.find(t=>t.signs.includes(zodiac))?.signDescs?.[zodiac]||''}<br><br>
+      <strong>Month / Secondary Sign — ${cap(mSign)}</strong><br>
+      Birth day ${dayNum} is ${dayNum<7?'before the 7th — uses previous month ('+mZodName+'→'+cap(mSign)+')':'on or after the 7th — uses current month ('+cap(mSign)+')'}. ${cap(mSign)} energy shapes social presentation.<br><br>
+      <strong>Life Path ${lp} — Calculation</strong><br>
+      <span style="font-family:monospace;font-size:11px;color:var(--g);background:rgba(201,168,76,.08);padding:4px 8px;border-radius:4px;display:inline-block;margin:4px 0">${lpSteps}</span><br>
+      ${chain.includes(16)?'<strong style="color:#b39ddb">⚠ 16/7 Rebirth energy in chain</strong> — depth through hardship.<br>':''}
+      ${chain.includes(28)?'<strong style="color:#81c784">⚠ 28 magnetic money in chain</strong>.<br>':''}
+      ${chain.includes(11)||chain.includes(22)||chain.includes(33)?'<strong style="color:#ffd54f">⚠ Master vibration in chain</strong>.<br>':''}
+      ${lpDesc(lp)}<br><br>
+      <strong>Day Energy ${de} — Calculation</strong><br>
+      Birth day: <span style="font-family:monospace;font-size:11px;color:var(--g);background:rgba(201,168,76,.08);padding:4px 8px;border-radius:4px;display:inline-block;margin:4px 0">${deSteps}</span><br>
+      ${dayEDesc(de)}.<br><br>
+      ${lp===de?'<strong style="color:#4caf85">LP and Day Energy match — extraordinarily rare. Purpose and execution unified.</strong><br><br>':''}
+      <strong>Personal Year ${py} &amp; Personal Month ${pm2}*</strong><br>
+      <em>*If this date is treated as a birth date, with today as reference.</em><br>
+      Personal Year ${py}: ${pyDesc(py)}. Personal Month ${pm2}: ${pyDesc(pm2).toLowerCase()}.
+    </div>`;
+  renderCalAgents(dob);
+  renderCalGrid();
+}
+
+function renderCalAgents(selectedDate){
+  if(!selectedDate){document.getElementById('cal-agents').innerHTML='';return}
+  let h=`<div class="ct" style="margin-top:4px">Your Agents on This Date</div>`;
+  const agentData=members.filter(m=>m.dob).map(m=>{
+    const py=getPersonalYear(m.dob);
+    const pm2=getPersonalMonth(m.dob);
+    const fs=fullSign(m.dob);
+    const ms=getMonthSign(m.dob);
+    const fc=dayForecastForAgent(m,selectedDate);
+    return{m,py,pm2,fs,ms,fc};
+  }).sort((a,b)=>b.fc.score-a.fc.score);
+
+  agentData.forEach(({m,py,pm2,fs,ms,fc})=>{
+    const tierCol={great:'#4caf85',good:'var(--g)',okay:'var(--d2)',bad:'#e57373'}[fc.tier];
+    const tierLbl={great:'Great Day',good:'Good Day',okay:'Neutral',bad:'Avoid Major Moves'}[fc.tier];
+    h+=`<div class="mr">
+      <div class="fl" style="gap:8px;flex:1;align-items:flex-start">
+        <div class="av ${avC(m.zodiac)}">${ze(m.zodiac)}</div>
+        <div style="flex:1">
+          <div class="pn">${m.name}</div>
+          <div class="pm">${fs} · LP${m.lifePath} · Day${m.dayEnergy} · ${cap(ms)} month</div>
+          <div class="pm">PY <strong style="color:var(--g)">${py}</strong> · PM <strong style="color:var(--g)">${pm2}</strong></div>
+          <div class="pm">${agN(m.agency)}</div>
+          ${fc.notes.length?`<div class="day-detail">${fc.notes.map(n=>'• '+n).join('<br>')}</div>`:''}
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="color:${tierCol};font-size:13px;font-weight:700">${tierLbl}</div>
+        <div style="font-size:10px;color:var(--d)">Day Score ${fc.score}</div>
+      </div></div>`;
+  });
+  document.getElementById('cal-agents').innerHTML=h;
+}
+
+function renderCalGrid(){
+  const fd=new Date(calYear,calMonth,1).getDay();
+  const dim=new Date(calYear,calMonth+1,0).getDate();
+  const today=new Date().toISOString().split('T')[0];
+  const sel=document.getElementById('cal-date').value;
+  const agentId=document.getElementById('cal-agent').value;
+  const agent=agentId?members.find(m=>m.id===agentId):null;
+  document.getElementById('cal-month-lbl').textContent=MONTH_NAMES[calMonth]+' '+calYear+(agent?` — ${agent.name}'s days`:'');
+  let h='';
+  for(let i=0;i<fd;i++)h+=`<div></div>`;
+  for(let d=1;d<=dim;d++){
+    const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const lp=getLP(ds);const de=getDayE(ds);const z=getZodiac(ds);
+    let tierCls='';
+    if(agent){const fc=dayForecastForAgent(agent,ds);tierCls=`day-${fc.tier}`}
+    h+=`<div class="cal-cell ${ds===today?'today':''} ${ds===sel?'sel':''} ${tierCls}" onclick="pickCalDay('${ds}')">
+      <div class="cal-num">${d}</div>
+      <div class="cal-lp">${ze(z)}</div>
+      <div class="cal-lp">LP${lp}·D${de}</div>
+    </div>`;
+  }
+  document.getElementById('cal-grid').innerHTML=h;
+}
+function pickCalDay(ds){document.getElementById('cal-date').value=ds;calcDay()}
+function calNav(dir){calMonth+=dir;if(calMonth<0){calMonth=11;calYear--}if(calMonth>11){calMonth=0;calYear++}renderCalGrid()}
+function jumpCal(){
+  const v=document.getElementById('cal-jump').value;if(!v)return;
+  let d=new Date((document.getElementById('cal-date').value||new Date().toISOString().split('T')[0])+'T12:00:00');
+  if(v==='today')d=new Date();
+  else if(v==='nm')d.setMonth(d.getMonth()+1);
+  else if(v==='pm')d.setMonth(d.getMonth()-1);
+  else if(v==='ny')d.setFullYear(d.getFullYear()+1);
+  else if(v==='py')d.setFullYear(d.getFullYear()-1);
+  const ds=d.toISOString().split('T')[0];
+  document.getElementById('cal-date').value=ds;
+  calYear=d.getFullYear();calMonth=d.getMonth();
+  calcDay();document.getElementById('cal-jump').value='';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  NAV & SAVE
+// ═══════════════════════════════════════════════════════════════════
+function showView(v,btn){
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nt').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(v==='members'){rStats();rMem()}
+  if(v==='tree')rTree();
+  if(v==='guide')rGuide();
+  if(v==='cal'){populateAgentSelect();renderCalGrid()}
+}
+
+function saveHTML(){
+  const membersJSON=JSON.stringify(members);
+  const agenciesJSON=JSON.stringify(agencies);
+  let src=document.documentElement.outerHTML;
+  const injection=`\n<script>window.__BAKED_MEMBERS__=${membersJSON};window.__BAKED_AGENCIES__=${agenciesJSON};window.__BAKED_COUNTER__=${agencyCounter};<\/script>`;
+  src=src.replace('</head>',injection+'</head>');
+  const blob=new Blob([src],{type:'text/html'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='cornerstone_crm_'+new Date().toISOString().split('T')[0]+'.html';
+  a.click();
+  toast('HTML saved');
+}
+
+// INIT — load baked data first, then local, then try GitHub
+if(window.__BAKED_MEMBERS__){try{localStorage.setItem(SK,JSON.stringify(window.__BAKED_MEMBERS__))}catch(e){}}
+if(window.__BAKED_AGENCIES__){try{localStorage.setItem(AK,JSON.stringify(window.__BAKED_AGENCIES__))}catch(e){}}
+if(window.__BAKED_COUNTER__){try{localStorage.setItem(CK,String(window.__BAKED_COUNTER__))}catch(e){}}
+load();
+// Pull from GitHub in background — updates CRM with latest hierarchy from any device
+(async()=>{
+  const GHK='cc_gh_cfg';
+  let ghCfg=null;
+  try{ghCfg=JSON.parse(localStorage.getItem(GHK))||null}catch(e){}
+  if(!ghCfg?.token||!ghCfg?.repo)return;
+  const repoURL='https://api.github.com/repos/'+ghCfg.repo+'/contents/'+(ghCfg.path||'data')+'/portal_data.json';
+  const hdrs={'Authorization':'token '+ghCfg.token,'Accept':'application/vnd.github.v3+json'};
+  try{
+    const r=await fetch(repoURL,{headers:hdrs});
+    if(!r.ok)return;
+    const j=await r.json();
+    const txt=decodeURIComponent(escape(atob(j.content.replace(/\n/g,''))));
+    const remote=JSON.parse(txt);
+    if(remote.crmMembers?.length){
+      members=remote.crmMembers;
+      localStorage.setItem(SK,JSON.stringify(members));
+    }
+    if(remote.crmAgencies&&Object.keys(remote.crmAgencies).length){
+      agencies=remote.crmAgencies;
+      localStorage.setItem(AK,JSON.stringify(agencies));
+    }
+    if(remote.crmCounter!==undefined){
+      agencyCounter=remote.crmCounter;
+      localStorage.setItem(CK,String(agencyCounter));
+    }
+    refresh();
+    toast('Hierarchy synced from GitHub');
+  }catch(e){/* silent */}
+})();
+</script>
+</body>
+</html>

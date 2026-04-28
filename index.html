@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cornerstone Council</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="firebase.js"></script>
+<script src="data.js"></script>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-page">
+  <div class="login-wrap">
+    <div class="login-logo-wrap"><img src="assets/agentlogo.png" alt="Cornerstone Council"></div>
+    <div class="login-card">
+      <div class="login-sub">Agent Portal</div>
+      <div class="fg"><label>Username</label><input id="l-user" type="text" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="fg"><label>Password</label><input id="l-pass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="login-err" id="l-err">Invalid credentials. Please try again.</div>
+      <button class="btn btn-pri btn-full" onclick="doLogin()">Sign In &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header class="app-hdr">
+    <div class="hdr-left">
+      <button class="btn btn-ghost btn-sm admin-tab" id="undo-btn" onclick="doUndo()" style="display:none" disabled title="Undo (Ctrl+Z)">&#8630;</button>
+      <button class="btn btn-ghost btn-sm admin-tab" id="redo-btn" onclick="doRedo()" style="display:none" disabled title="Redo">&#8631;</button>
+      <button class="btn btn-ghost btn-sm owner-tab" id="recruit-btn" style="display:none" onclick="openRecruitCRM()">&#9670; Recruiting</button>
+    </div>
+    <img src="assets/logo.png" alt="Cornerstone Council" class="hdr-logo">
+    <div class="hdr-right">
+      <span id="worn-badge-wrap"></span>
+      <div class="user-pill" style="cursor:pointer" onclick="openOwnProfile()">
+        <div class="user-av" id="hdr-av">CC</div>
+        <div class="user-nm" id="hdr-nm"></div>
+        <span class="role-badge rb-agent" id="hdr-role">Agent</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign Out</button>
+    </div>
+  </header>
+
+  <nav class="subnav">
+    <button class="tab active" onclick="switchTab('home',this)">Home</button>
+    <button class="tab" onclick="switchTab('dashboard',this)">Dashboard</button>
+    <button class="tab" onclick="switchTab('leaderboard',this)">Leaderboard</button>
+    <button class="tab" onclick="switchTab('teams',this)">Teams</button>
+    <button class="tab" onclick="switchTab('consistency',this)">Consistency</button>
+    <button class="tab" onclick="switchTab('incentives',this)">Incentives</button>
+    <button class="tab admin-tab" onclick="switchTab('manage',this)" style="display:none">Manage</button>
+    <button class="tab admin-tab" onclick="switchTab('reports',this)" style="display:none">Reports</button>
+  </nav>
+
+  <div class="content-area">
+    <div class="view-wrap">
+
+      <!-- HOME -->
+      <div class="view active" id="view-home">
+        <div class="welcome-bar" id="home-welcome" style="font-size:13px;color:var(--d2);margin-bottom:16px;padding:10px 16px;background:var(--g4);border:1px solid var(--b);border-radius:8px;font-style:italic"></div>
+        <div class="flsb" style="margin-bottom:12px">
+          <div><div style="font-size:20px;font-weight:700;color:var(--g)">Cornerstone Council</div><div style="font-size:11px;color:var(--d)">Collective Agency Production</div></div>
+          <div class="tf-bar" id="home-tf">
+            <button class="tf-btn" onclick="setTF('home','1d',this)">1D</button>
+            <button class="tf-btn" onclick="setTF('home','7d',this)">7D</button>
+            <button class="tf-btn" onclick="setTF('home','30d',this)">30D</button>
+            <button class="tf-btn" onclick="setTF('home','90d',this)">90D</button>
+            <button class="tf-btn active" onclick="setTF('home','month',this)">Month</button>
+            <button class="tf-btn" onclick="setTF('home','ytd',this)">YTD</button>
+            <button class="tf-btn" onclick="setTF('home','alltime',this)">All Time</button>
+          </div>
+        </div>
+        <div class="stat-grid" id="home-stats"></div>
+        <div class="card"><div class="ct" id="home-chart-label">Agency Production</div><div class="chart-wrap"><canvas id="chart-home"></canvas></div></div>
+        <div class="post-hero">
+          <div class="post-hero-title">Submit Your Deal</div>
+          <button class="btn btn-pri" style="padding:10px 28px;font-size:13px" onclick="openPostDeal()">&#43; Post Deal</button>
+        </div>
+        <div class="card"><div class="ct">All Agency Deals</div><div id="home-deals"></div></div>
+      </div>
+
+      <!-- DASHBOARD -->
+      <div class="view" id="view-dashboard">
+        <div class="flsb" style="margin-bottom:14px">
+          <div><div style="font-size:20px;font-weight:700;color:var(--g)">My Dashboard</div><div style="font-size:11px;color:var(--d)">Personal production &amp; earnings</div></div>
+          <div class="tf-bar" id="dash-tf">
+            <button class="tf-btn" onclick="setTF('dash','today',this)">Today</button>
+            <button class="tf-btn" onclick="setTF('dash','week',this)">Week</button>
+            <button class="tf-btn active" onclick="setTF('dash','month',this)">Month</button>
+            <button class="tf-btn" onclick="setTF('dash','ytd',this)">YTD</button>
+          </div>
+        </div>
+        <div class="stat-grid" id="dash-stats"></div>
+        <div id="my-commission-card"></div>
+        <div class="card"><div class="ct">My Deals</div><div id="my-deals-list"></div></div>
+        <div class="card">
+          <div class="flsb" style="margin-bottom:10px">
+            <div class="ct" style="margin:0">Lead Spend History</div>
+            <button class="btn btn-ghost btn-sm" onclick="openLeadSpend()">+ Add Lead Spend</button>
+          </div>
+          <div id="my-spend-list"></div>
+        </div>
+      </div>
+
+      <!-- LEADERBOARD -->
+      <div class="view" id="view-leaderboard">
+        <div class="flsb" style="margin-bottom:14px">
+          <div><div style="font-size:20px;font-weight:700;color:var(--g)">Leaderboard</div></div>
+          <div>
+            <div class="tf-bar">
+              <button class="tf-btn" onclick="setTF('lb','today',this)">Today</button>
+              <button class="tf-btn" onclick="setTF('lb','week',this)">Week</button>
+              <button class="tf-btn active" onclick="setTF('lb','month',this)">Month</button>
+              <button class="tf-btn" onclick="setTF('lb','ytd',this)">YTD</button>
+              <button class="tf-btn" onclick="setTF('lb','alltime',this)">All Time</button>
+              <button class="tf-btn" onclick="setTF('lb','custom',this)">Custom</button>
+            </div>
+            <div class="tf-custom" id="lb-custom"><input type="date" id="lb-cs" onchange="renderLeaderboard()"><span style="color:var(--d)">to</span><input type="date" id="lb-ce" onchange="renderLeaderboard()"></div>
+          </div>
+        </div>
+        <div class="card"><div class="ct">AP by Agent</div><div class="chart-wrap tall"><canvas id="chart-lb"></canvas></div></div>
+        <div class="card"><div class="ct" id="lb-ct">Rankings — Month</div><div class="tbl-wrap"><table class="tbl" id="lb-tbl"></table></div></div>
+      </div>
+
+      <!-- TEAMS -->
+      <div class="view" id="view-teams">
+        <div class="flsb" style="margin-bottom:14px">
+          <div><div style="font-size:20px;font-weight:700;color:var(--g)">Teams</div></div>
+          <div>
+            <div class="tf-bar">
+              <button class="tf-btn" onclick="setTF('teams','today',this)">Today</button>
+              <button class="tf-btn" onclick="setTF('teams','week',this)">Week</button>
+              <button class="tf-btn active" onclick="setTF('teams','month',this)">Month</button>
+              <button class="tf-btn" onclick="setTF('teams','ytd',this)">YTD</button>
+              <button class="tf-btn" onclick="setTF('teams','alltime',this)">All Time</button>
+              <button class="tf-btn" onclick="setTF('teams','custom',this)">Custom</button>
+            </div>
+            <div class="tf-custom" id="teams-custom"><input type="date" id="teams-cs" onchange="renderTeams()"><span style="color:var(--d)">to</span><input type="date" id="teams-ce" onchange="renderTeams()"></div>
+          </div>
+        </div>
+        <div id="teams-body"></div>
+      </div>
+
+      <!-- CONSISTENCY -->
+      <div class="view" id="view-consistency">
+        <div class="flsb" style="margin-bottom:14px">
+          <div><div style="font-size:20px;font-weight:700;color:var(--g)">Consistency</div><div style="font-size:11px;color:var(--d)">Daily streaks &amp; activity</div></div>
+          <div class="tf-bar">
+            <button class="tf-btn" onclick="setTF('cons','month',this)">Month</button>
+            <button class="tf-btn active" onclick="setTF('cons','ytd',this)">YTD</button>
+            <button class="tf-btn" onclick="setTF('cons','alltime',this)">All Time</button>
+          </div>
+        </div>
+        <div id="consistency-body"></div>
+      </div>
+
+      <!-- INCENTIVES -->
+      <div class="view" id="view-incentives">
+        <div class="flsb" style="margin-bottom:14px">
+          <div><div style="font-size:20px;font-weight:700;color:var(--g)">Incentives</div></div>
+          <button class="btn btn-pri btn-sm" id="add-inc-btn" style="display:none" onclick="openAddInc()">+ Add Incentive</button>
+        </div>
+        <div class="incentives-grid" id="incentives-body"></div>
+      </div>
+
+      <!-- MANAGE -->
+      <div class="view" id="view-manage">
+        <div class="flsb" style="margin-bottom:14px">
+          <div><div style="font-size:20px;font-weight:700;color:var(--g)">Manage</div></div>
+          <button class="btn btn-pri btn-sm" onclick="openAddUser()">+ Add Agent</button>
+        </div>
+        <div class="info-box" id="elite-info-box" style="display:none">
+          <strong>&#9670; Owner Access.</strong> Full control — recruit CRM, all roles, all commission data, astrology performance.
+          <div class="gh-status-row"><div class="gh-dot on" id="gh-dot"></div><span id="gh-status-txt">Firebase — Firestore</span><button class="btn btn-ghost btn-xs" onclick="openGHModal()" style="margin-left:8px">Database Info</button></div>
+        </div>
+        <div style="display:flex;gap:4px;margin-bottom:12px">
+          <button class="tf-btn active" id="mt-users" onclick="switchManageTab('users',this)">Agents &amp; Hierarchy</button>
+          <button class="tf-btn" id="mt-deals" onclick="switchManageTab('deals',this)">All Deals</button>
+        </div>
+        <div id="manage-users-div"></div>
+        <div id="manage-deals-div" style="display:none"></div>
+      </div>
+
+      <!-- REPORTS -->
+      <div class="view" id="view-reports">
+        <div class="flsb" style="margin-bottom:14px">
+          <div><div style="font-size:20px;font-weight:700;color:var(--g)">Reports</div></div>
+          <button class="btn btn-pri btn-sm" onclick="generateCurrentMonthReport()">&#9999; Save This Month</button>
+        </div>
+        <div class="card owner-tab" id="astro-section" style="display:none">
+          <div class="ct">&#9670; Sign Performance — Owner View</div>
+          <div id="astro-body"></div>
+        </div>
+        <div class="card"><div class="ct">Monthly Reports</div><div id="monthly-reports-list"></div></div>
+        <div class="flsb" style="margin-bottom:10px;margin-top:14px">
+          <div style="font-size:12px;color:var(--d2)">CSV Export</div>
+          <div class="tf-bar">
+            <button class="tf-btn active" onclick="setTF('rpt','month',this)">Month</button>
+            <button class="tf-btn" onclick="setTF('rpt','ytd',this)">YTD</button>
+            <button class="tf-btn" onclick="setTF('rpt','alltime',this)">All Time</button>
+            <button class="tf-btn" onclick="setTF('rpt','custom',this)">Custom</button>
+          </div>
+        </div>
+        <div class="tf-custom" id="rpt-custom" style="margin-bottom:10px"><input type="date" id="rpt-cs" onchange="renderReports()"><span style="color:var(--d)">to</span><input type="date" id="rpt-ce" onchange="renderReports()"></div>
+        <div class="fl" style="margin-bottom:14px">
+          <button class="btn btn-ghost btn-sm" onclick="dlReport('lb')">&#8681; Leaderboard</button>
+          <button class="btn btn-ghost btn-sm" onclick="dlReport('deals')">&#8681; All Deals</button>
+          <button class="btn btn-ghost btn-sm" onclick="dlReport('teams')">&#8681; Teams</button>
+          <button class="btn btn-ghost btn-sm" onclick="dlReport('roi')">&#8681; ROI</button>
+        </div>
+        <div id="rpt-preview"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PROFILE MODAL (centered) ═══ -->
+<div id="profile-modal-ov" onclick="if(event.target===this)closeProfile()">
+  <div class="profile-modal">
+    <div class="profile-modal-hdr">
+      <div style="font-size:13px;font-weight:700;color:var(--g)" id="profile-modal-title">Profile</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeProfile()">&#10005; Close</button>
+    </div>
+    <div class="profile-modal-body" id="profile-modal-body"></div>
+  </div>
+</div>
+
+<!-- ═══ INTERNAL CONFIRM DIALOG ═══ -->
+<div class="confirm-ov" id="confirm-ov">
+  <div class="confirm-box">
+    <h3 id="confirm-title">Confirm</h3>
+    <p id="confirm-msg"></p>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" onclick="closeConfirm(false)">Cancel</button>
+      <button class="btn btn-dan" id="confirm-ok-btn" onclick="closeConfirm(true)">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DEAL MODAL ═══ -->
+<div class="modal-ov" id="modal-deal">
+  <div class="modal">
+    <div class="modal-title" id="deal-modal-ttl">Submit Deal</div>
+    <div class="fr2">
+      <div class="fg"><label>Date</label><input type="date" id="pd-date"></div>
+      <div class="fg"><label>Monthly Premium ($)</label><input type="number" id="pd-mp" min="0" step="0.01" placeholder="e.g. 150.00" oninput="calcAP()"></div>
+    </div>
+    <div class="fg"><label>AP — Annualized Premium</label><input type="text" id="pd-ap-show" readonly style="color:var(--g);font-weight:700;font-size:15px;background:var(--g4);border-color:var(--b2)"></div>
+    <div class="fr2">
+      <div class="fg"><label>Policy Type</label>
+        <select id="pd-ptype"><option value="">Select...</option><option>Whole Life</option><option>IUL</option><option>Term Life</option><option>Annuity</option></select>
+      </div>
+      <div class="fg"><label>Carrier</label><input type="text" id="pd-carrier" placeholder="Insurance carrier"></div>
+    </div>
+    <div class="fg"><label>Notes (private until clicked)</label><textarea id="pd-notes"></textarea></div>
+    <input type="hidden" id="pd-id">
+    <div id="deal-err" class="warn-box mt8" style="display:none"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeMod('modal-deal')">Cancel</button>
+      <button class="btn btn-pri" onclick="submitDeal()">Submit Deal</button>
+    </div>
+  </div>
+</div>
+
+<!-- LEAD SPEND -->
+<div class="modal-ov" id="modal-spend">
+  <div class="modal">
+    <div class="modal-title">Post Lead Spend</div>
+    <div class="info-box">Lead spend subtracts from your earnings in Dashboard. Only you and admins see this.</div>
+    <div class="fr2">
+      <div class="fg"><label>Week of (Monday)</label><input type="date" id="sp-week"></div>
+      <div class="fg"><label>Amount ($)</label><input type="number" id="sp-amount" min="0" step="0.01" placeholder="0.00"></div>
+    </div>
+    <div class="fg"><label>Source / Notes</label><input type="text" id="sp-notes" placeholder="e.g. Facebook leads..."></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeMod('modal-spend')">Cancel</button>
+      <button class="btn btn-pri" onclick="submitSpend()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD / EDIT USER -->
+<div class="modal-ov" id="modal-user">
+  <div class="modal modal-lg">
+    <div class="modal-title" id="user-modal-ttl">Add Agent Account</div>
+    <div class="fg" id="u-link-grp"><label>Link to CRM Member</label><select id="u-agent-link"><option value="">Select from hierarchy...</option></select><div class="hint">Only CRM hierarchy members can receive accounts.</div></div>
+    <div class="fr2">
+      <div class="fg"><label>Username</label><input type="text" id="u-username"></div>
+      <div class="fg"><label>Password</label><input type="text" id="u-password"></div>
+    </div>
+    <div class="fg"><label>Commission Rate (%) — blank for none</label><input type="number" id="u-comm" min="0" max="100" step="0.5" placeholder="blank = none"></div>
+    <div class="fg" id="u-join-date-grp" style="display:none"><label>Join Date (owner only)</label><input type="date" id="u-join-date"></div>
+    <div class="fg" id="u-role-grp" style="display:none"><label>Role (owner only)</label><select id="u-role"><option value="agent">Agent</option><option value="admin">Admin</option><option value="owner">Owner</option></select></div>
+    <input type="hidden" id="u-id">
+    <div id="user-err" class="warn-box mt8" style="display:none"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeMod('modal-user')">Cancel</button>
+      <button class="btn btn-pri" onclick="saveUser()">Save Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD / EDIT INCENTIVE -->
+<div class="modal-ov" id="modal-inc">
+  <div class="modal modal-lg">
+    <div class="modal-title" id="inc-modal-ttl">Add Incentive</div>
+    <div class="fr2">
+      <div class="fg"><label>Badge Emoji</label><input type="text" id="inc-emoji" placeholder="e.g. 🏆 🔥 💰 ⭐" style="font-size:20px;text-align:center"></div>
+      <div class="fg"><label>Badge Title</label><input type="text" id="inc-badge-title" placeholder="e.g. Top Producer"></div>
+    </div>
+    <div class="fg"><label>Incentive Type</label>
+      <select id="inc-scope">
+        <option value="agency">Agency Wide — all agents compete</option>
+        <option value="personal">Personal Agent — each vs their own goal</option>
+        <option value="team">Team Production — team lead + downlines</option>
+      </select>
+    </div>
+    <div class="fr2">
+      <div class="fg"><label>Title</label><input type="text" id="inc-title" placeholder="e.g. April Top Producer"></div>
+      <div class="fg"><label>Timeframe</label>
+        <select id="inc-tf"><option value="weekly">Weekly</option><option value="monthly" selected>Monthly</option><option value="quarterly">Quarterly</option><option value="semiannual">Semi-Annual</option><option value="annual">Annual</option></select>
+      </div>
+    </div>
+    <div class="fr2">
+      <div class="fg"><label>Start Date</label><input type="date" id="inc-start"></div>
+      <div class="fg"><label>End Date</label><input type="date" id="inc-end"></div>
+    </div>
+    <div class="fg"><label>AP Goal ($)</label><input type="number" id="inc-goal" min="0" placeholder="e.g. 50000"></div>
+    <div class="fg"><label>Reward / Prize</label><input type="text" id="inc-reward" placeholder="e.g. $500 bonus, trip..."></div>
+    <div class="fg"><label>Description</label><textarea id="inc-desc" placeholder="Details..."></textarea></div>
+    <input type="hidden" id="inc-id">
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeMod('modal-inc')">Cancel</button>
+      <button class="btn btn-pri" onclick="saveInc()">Save Incentive</button>
+    </div>
+  </div>
+</div>
+
+<!-- GIVE BADGE (owner manual) -->
+<div class="modal-ov" id="modal-give-badge">
+  <div class="modal">
+    <div class="modal-title">Give Badge Manually</div>
+    <div class="fg"><label>Badge Emoji</label><input type="text" id="gb-emoji" placeholder="🏆" style="font-size:20px;text-align:center;max-width:80px"></div>
+    <div class="fg"><label>Badge Name</label><input type="text" id="gb-name" placeholder="e.g. Founding Member"></div>
+    <div class="fg"><label>Note (optional)</label><input type="text" id="gb-note" placeholder="Why they earned this..."></div>
+    <input type="hidden" id="gb-agent-id">
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeMod('modal-give-badge')">Cancel</button>
+      <button class="btn btn-pri" onclick="giveBadge()">Give Badge</button>
+    </div>
+  </div>
+</div>
+
+<!-- FIREBASE STATUS -->
+<div class="modal-ov" id="modal-gh">
+  <div class="modal">
+    <div class="modal-title">&#9670; Firebase Database</div>
+    <div class="info-box">
+      <strong>Firestore is your live database.</strong> Every deal, account, badge, and incentive saves instantly from every device — no token required.<br><br>
+      Project: <strong style="color:var(--g)">cornerstonearchive</strong><br>
+      Database: <strong style="color:var(--g)">Firestore (default)</strong><br>
+      Mode: <strong style="color:var(--g)">Real-time, all devices</strong>
+    </div>
+    <div class="gh-status-row"><div class="gh-dot on" id="gh-dot"></div><span id="gh-status-txt">Firebase — Firestore</span></div>
+    <div class="modal-footer"><button class="btn btn-pri" onclick="closeMod('modal-gh')">Got it</button></div>
+  </div>
+</div>
+
+<!-- AGENT REPORT -->
+<div class="modal-ov" id="modal-agent-rpt">
+  <div class="modal modal-lg">
+    <div class="modal-title" id="ar-title">Agent Report</div>
+    <div id="ar-body"></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeMod('modal-agent-rpt')">Close</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="sync-ind" id="sync-ind">&#8593; Saving...</div>
+
+<script src="app.js"></script>
+</body>
+</html>
