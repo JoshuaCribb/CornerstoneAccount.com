@@ -873,7 +873,7 @@ function _renderProfile(u){
     <div class="profile-av-lg" ${isOwnProfile?'onclick="triggerAvatarUpload()"':''}>
       ${avImg}${isOwnProfile?`<div class="av-upload-overlay">Change</div><input type="file" id="avatar-file" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">`:''}</div>
     <div class="profile-hero-info">
-      <div class="profile-name-big">${u.agentName||u.username} ${worn?` <span title="${worn.name}" style="font-size:20px">${worn.emoji||'🏅'}</span>`:''}</div>
+      <div class="profile-name-big">${u.agentName||u.username} ${wornBadges.map(b=>`<span title="${b.name}" style="font-size:18px">${b.emoji||'🏅'}</span>`).join('')}</div>
       <div class="profile-role-line">${Store.agN(m?.agency)} <span class="badge badge-g">${u.role}</span></div>
       <div class="profile-join-line">Joined: ${isOwner()?`<input type="date" value="${u.joinDate||''}" style="background:var(--p2);border:1px solid var(--b);border-radius:4px;padding:2px 8px;color:var(--g);font-size:11px;font-family:Georgia,serif;outline:none" onchange="saveJoinDate('${u.id}',this.value)">`:u.joinDate?fmtDate(u.joinDate):'Not set'}</div>
       ${u.bio?`<div style="font-size:11px;color:var(--d2);line-height:1.6;margin-top:6px">${u.bio}</div>`:''}
