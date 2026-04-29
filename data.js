@@ -334,5 +334,6 @@ const Store = (() => {
     undo,redo,pushUndo,updateUndoBtns,
     uid,getAgentUsers,getMember,getDownlineIds,isManager,isBirthday,hasBirthdayWarriorBadge,
     totalAP,totalMP,totalReferrals,agN,getMondayOf,filterByTF,buildLB,incProgress,incProgressAll,
+    goalProgress,persistencyScore,
   };
 })();
