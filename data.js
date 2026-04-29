@@ -9,9 +9,9 @@ const Store = (() => {
 
   // ── DEFAULT PORTAL ACCOUNTS ────────────────────────────────────
   const DEF_USERS=[
-    {id:'u_jc',username:'JC',pwd:'Josh09212002',role:'admin',agentId:'joshua-001',agentName:'Joshua Cribb',agencyId:'cornerstone',commission:'',active:true,createdAt:'2024-01-01',joinDate:'2024-01-01',bio:'',links:{},avatar:'',badges:[],wornBadgeId:null},
-    {id:'u_ty',username:'TyreseDuke90',pwd:'2026',role:'admin',agentId:'tyrese-001',agentName:'Tyrese Williams',agencyId:'cornerstone',commission:'',active:true,createdAt:'2024-01-01',joinDate:'2024-01-01',bio:'',links:{},avatar:'',badges:[],wornBadgeId:null},
-    {id:'u_own',username:'teamcornerstone',pwd:'Manager26',role:'owner',agentId:null,agentName:'Team Cornerstone',agencyId:null,commission:'',active:true,createdAt:'2024-01-01',joinDate:'2024-01-01',bio:'',links:{},avatar:'',badges:[],wornBadgeId:null},
+    {id:'u_jc',username:'JC',pwd:'Josh09212002',role:'admin',agentId:'joshua-001',agentName:'Joshua Cribb',agencyId:'cornerstone',commission:'',active:true,createdAt:'2024-01-01',joinDate:'2024-01-01',bio:'',links:{},avatar:'',badges:[],wornBadgeId:null,wornBadges:['','','']},
+    {id:'u_ty',username:'TyreseDuke90',pwd:'2026',role:'admin',agentId:'tyrese-001',agentName:'Tyrese Williams',agencyId:'cornerstone',commission:'',active:true,createdAt:'2024-01-01',joinDate:'2024-01-01',bio:'',links:{},avatar:'',badges:[],wornBadgeId:null,wornBadges:['','','']},
+    {id:'u_own',username:'teamcornerstone',pwd:'Manager26',role:'owner',agentId:null,agentName:'Team Cornerstone',agencyId:null,commission:'',active:true,createdAt:'2024-01-01',joinDate:'2024-01-01',bio:'',links:{},avatar:'',badges:[],wornBadgeId:null,wornBadges:['','','']},
   ];
 
   // ── SEED CRM HIERARCHY (mirrors recruit.html SEED) ─────────────
@@ -37,6 +37,7 @@ const Store = (() => {
     users:[],deals:[],spend:[],incentives:[],monthlyReports:[],
     recruitPosts:[],  // private recruit posts per agent
     personalGoals:[],   // private per-agent goals
+    chargebacks:[],     // private per-agent chargebacks
     crmMembers:[],crmAgencies:{},crmCounter:5,
     undoStack:[],redoStack:[],
   };
@@ -54,6 +55,7 @@ const Store = (() => {
       if(u.commission===undefined)u.commission='';
       if(u.badges===undefined)u.badges=[];
       if(u.wornBadgeId===undefined)u.wornBadgeId=null;
+      if(u.wornBadges===undefined)u.wornBadges=['','',''];
 
       // remove founders
       if(u.id==='u_elite'||u.username==='founders')u.active=false;
@@ -64,6 +66,7 @@ const Store = (() => {
     try{state.monthlyReports=JSON.parse(localStorage.getItem('cc_mrpts'))||[];}catch(e){state.monthlyReports=[];}
     try{state.recruitPosts=JSON.parse(localStorage.getItem(RK))||[];}catch(e){state.recruitPosts=[];}
     try{state.personalGoals=JSON.parse(localStorage.getItem('cc_goals'))||[];}catch(e){state.personalGoals=[];}
+    try{state.chargebacks=JSON.parse(localStorage.getItem('cc_cb'))||[];}catch(e){state.chargebacks=[];}
     // CRM — use seed if empty
     try{state.crmMembers=JSON.parse(localStorage.getItem(CRM_MK))||[];}catch(e){state.crmMembers=[];}
     if(!state.crmMembers.length){
@@ -95,6 +98,7 @@ const Store = (() => {
     try{localStorage.setItem('cc_mrpts',JSON.stringify(state.monthlyReports));}catch(e){}
     try{localStorage.setItem(RK,JSON.stringify(state.recruitPosts));}catch(e){}
     try{localStorage.setItem('cc_goals',JSON.stringify(state.personalGoals));}catch(e){}
+    try{localStorage.setItem('cc_cb',JSON.stringify(state.chargebacks));}catch(e){}
   }
   function _saveCRMLocal(){
     try{localStorage.setItem(CRM_MK,JSON.stringify(state.crmMembers));}catch(e){}
@@ -110,6 +114,7 @@ const Store = (() => {
       incentives:state.incentives,monthlyReports:state.monthlyReports,
       recruitPosts:state.recruitPosts,
       personalGoals:state.personalGoals,
+      chargebacks:state.chargebacks,
       crmMembers:state.crmMembers,crmAgencies:state.crmAgencies,crmCounter:state.crmCounter};
   }
 
@@ -125,6 +130,7 @@ const Store = (() => {
     if(remote.monthlyReports?.length)state.monthlyReports=remote.monthlyReports;
     if(remote.recruitPosts?.length)state.recruitPosts=remote.recruitPosts;
     if(remote.personalGoals?.length)state.personalGoals=remote.personalGoals;
+    if(remote.chargebacks?.length)state.chargebacks=remote.chargebacks;
     if(remote.crmMembers?.length)state.crmMembers=remote.crmMembers;
     if(remote.crmAgencies&&Object.keys(remote.crmAgencies).length)state.crmAgencies=remote.crmAgencies;
     if(remote.crmCounter!==undefined)state.crmCounter=remote.crmCounter;
@@ -133,6 +139,7 @@ const Store = (() => {
     state.users.forEach(u=>{
       if(u.badges===undefined)u.badges=[];
       if(u.wornBadgeId===undefined)u.wornBadgeId=null;
+      if(u.wornBadges===undefined)u.wornBadges=['','',''];
 
     });
     state.deals.forEach(d=>{
@@ -231,6 +238,7 @@ const Store = (() => {
     }
     if(metric==='deals')return myDeals.length;
     if(metric==='referrals')return totalReferrals(myDeals);
+    if(metric==='allreferrals')return totalReferrals(myDeals)+myDeals.filter(d=>d.leadType==='Warm Market').length;
     if(metric==='warmmarket')return myDeals.filter(d=>d.leadType==='Warm Market').length;
     if(metric==='days'){const days=new Set(myDeals.map(d=>d.date));return days.size;}
     if(metric==='recruits'){
@@ -285,6 +293,30 @@ const Store = (() => {
     return 0;
   }
 
+
+  // Persistency: % of deals from N months ago that are still active (no chargeback)
+  function persistencyScore(agentId, monthsBack){
+    const now=new Date();
+    const windowEnd=new Date(now.getFullYear(),now.getMonth()-monthsBack+1,1);
+    const windowStart=new Date(now.getFullYear(),now.getMonth()-monthsBack-1,1);
+    const dealsInWindow=state.deals.filter(d=>{
+      if(d.agentId!==agentId)return false;
+      const dd=new Date(d.date+'T12:00:00');
+      return dd>=windowStart&&dd<windowEnd;
+    });
+    if(!dealsInWindow.length)return null; // no data
+    const cbAP=state.chargebacks
+      .filter(cb=>cb.agentId===agentId)
+      .reduce((s,cb)=>{
+        const cbDate=new Date(cb.date+'T12:00:00');
+        if(cbDate<windowEnd)return s;
+        return s+(cb.mp*12||0);
+      },0);
+    const totalAP=dealsInWindow.reduce((s,d)=>s+(d.ap||0),0);
+    if(!totalAP)return null;
+    return Math.max(0,Math.min(100,Math.round(((totalAP-cbAP)/totalAP)*100)));
+  }
+
   return{
     get users(){return state.users;},
     get deals(){return state.deals;},
@@ -293,6 +325,7 @@ const Store = (() => {
     get monthlyReports(){return state.monthlyReports;},
     get recruitPosts(){return state.recruitPosts;},
     get personalGoals(){return state.personalGoals;},
+    get chargebacks(){return state.chargebacks;},
     get crmMembers(){return state.crmMembers;},
     get crmAgencies(){return state.crmAgencies;},
     get crmCounter(){return state.crmCounter;},

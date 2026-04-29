@@ -112,10 +112,14 @@ function _setHdrAvatar(u){const av=document.getElementById('hdr-av');if(!av)retu
 
 function _updateWornBadge(){
   const wrap=document.getElementById('worn-badge-wrap');if(!wrap)return;
-  if(!cur?.agentId||!cur.wornBadgeId){wrap.innerHTML='';return;}
-  const badge=(cur.badges||[]).find(b=>b.id===cur.wornBadgeId);
-  if(!badge){wrap.innerHTML='';return;}
-  wrap.innerHTML=`<span class="worn-badge-icon" style="margin-right:4px">${badge.emoji||'🏅'}<span class="badge-tooltip">${badge.name}</span></span>`;
+  if(!cur?.agentId){wrap.innerHTML='';return;}
+  const slots=(cur.wornBadges||[cur.wornBadgeId||'','','']).slice(0,3);
+  const icons=slots.filter(id=>id).map(id=>{
+    const b=(cur.badges||[]).find(x=>x.id===id);
+    if(!b)return'';
+    return`<span class="worn-badge-icon" style="margin-right:2px">${b.emoji||'🏅'}<span class="badge-tooltip">${b.name}</span></span>`;
+  }).join('');
+  wrap.innerHTML=icons;
 }
 
 function enterApp(){
@@ -125,7 +129,9 @@ function enterApp(){
   _setHdrAvatar(cur);
   document.getElementById('hdr-nm').textContent=(cur.agentName||cur.username).split(' ')[0];
   const rb=document.getElementById('hdr-role');
-  const effRole=(!['admin','owner'].includes(cur.role)&&cur.agentId&&Store.isManager(cur.agentId))?'manager':cur.role;
+  // Auto-promote to manager if they have CRM downlines (regardless of portal accounts)
+  const hasDownlines=cur.agentId&&Store.getDownlineIds(cur.agentId).length>0;
+  const effRole=(!['admin','owner'].includes(cur.role)&&hasDownlines)?'manager':cur.role;
   const rl={owner:'Owner',admin:'Admin',manager:'Manager',agent:'Agent'};
   rb.textContent=(rl[effRole]||effRole).toUpperCase();
   rb.className='role-badge rb-'+(cur.role==='owner'?'owner':cur.role==='admin'?'admin':effRole==='manager'?'manager':'agent');
@@ -313,6 +319,7 @@ function renderLeaderboard(){
 // ── DASHBOARD ──────────────────────────────────────────────────
 function renderDashboard(){
   Store.loadLocal();
+  renderPersonalGoals(); // always render goals first (handles own visibility)
   if(!cur.agentId){document.getElementById('dash-stats').innerHTML='<div class="empty" style="grid-column:1/-1">Not linked to an agent profile.</div>';return;}
   const tf=TF.dash;const agentId=cur.agentId;
   const myDeals=Store.deals.filter(d=>d.agentId===agentId);
@@ -359,8 +366,8 @@ function renderDashboard(){
   // Recruit posts
   const rpCard=document.getElementById('recruit-posts-card');
   if(rpCard){rpCard.style.display='';renderRecruitPosts();}
-  // Personal goals
-  renderPersonalGoals();
+  // Chargebacks + persistency
+  renderChargebackSection();
 }
 
 // ── TEAMS ──────────────────────────────────────────────────────
@@ -439,7 +446,14 @@ function renderConsistency(){
   if(tf==='month')startDate=new Date(now.getFullYear(),now.getMonth(),1);
   else if(tf==='ytd')startDate=new Date(now.getFullYear(),0,1);
   else{const allDates=Store.deals.map(d=>new Date(d.date+'T12:00:00'));startDate=allDates.length?new Date(Math.min(...allDates)):new Date(now.getFullYear(),0,1);}
-  const au=Store.getAgentUsers();let html='';
+  // Filter: owner/admin see all; agents only see themselves + their registered downlines
+  const allAU=Store.getAgentUsers();
+  const au=isAdmin()?allAU:allAU.filter(u=>{
+    if(u.agentId===cur.agentId)return true;
+    if(cur.agentId){const downIds=Store.getDownlineIds(cur.agentId);return downIds.includes(u.agentId);}
+    return false;
+  });
+  let html='';
   au.forEach(u=>{
     const myD=Store.deals.filter(d=>d.agentId===u.agentId&&new Date(d.date+'T12:00:00')>=startDate);
     const dayMap={};myD.forEach(d=>{dayMap[d.date]=(dayMap[d.date]||0)+1;});
@@ -598,7 +612,8 @@ function editInc(id){
 const METRIC_OPTIONS=`
   <option value="ap">AP (Annualized Premium)</option>
   <option value="deals">Deals Submitted</option>
-  <option value="referrals">Referrals (beneficiary)</option>
+  <option value="referrals">Referrals — Beneficiary</option>
+  <option value="allreferrals">Referrals — All (beneficiary + warm market)</option>
   <option value="warmmarket">Warm Market Closes</option>
   <option value="days">Days Posted a Deal</option>
   <option value="recruits">Recruits Added</option>`;
@@ -850,9 +865,10 @@ function _renderProfile(u){
     {key:'discord',label:'Discord'},{key:'website',label:'Website'},
   ];
   const links=socialFields.filter(s=>u.links?.[s.key]).map(s=>{let href=u.links[s.key];if(s.key!=='discord'&&!/^https?:\/\//i.test(href))href='https://'+href;return`<a href="${s.key==='discord'?'#':href}" target="${s.key==='discord'?'_self':'_blank'}" rel="noopener" class="social-link">${s.label}</a>`;}).join('');
-  const worn=(u.badges||[]).find(b=>b.id===u.wornBadgeId);
+  const wornSlots=(u.wornBadges||[u.wornBadgeId||'','','']).slice(0,3);
+  const wornBadges=wornSlots.map(id=>(u.badges||[]).find(b=>b.id===id)).filter(Boolean);
   document.getElementById('profile-modal-title').textContent=u.agentName||u.username;
-  const tabs=[{id:'deals',label:'Deals'},{id:'badges',label:`Badges${(u.badges||[]).length?' ('+u.badges.length+')':''}`},...(isOwnProfile?[{id:'edit',label:'Edit Profile'}]:[])];
+  const tabs=[{id:'deals',label:'Deals'},{id:'badges',label:`Badges${(u.badges||[]).length?' ('+u.badges.length+')':''}`},...(isOwnProfile?[{id:'edit',label:'Edit Profile'},{id:'settings',label:'Settings'}]:[])];
   let html=`<div class="profile-hero">
     <div class="profile-av-lg" ${isOwnProfile?'onclick="triggerAvatarUpload()"':''}>
       ${avImg}${isOwnProfile?`<div class="av-upload-overlay">Change</div><input type="file" id="avatar-file" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">`:''}</div>
@@ -877,11 +893,23 @@ function _renderProfile(u){
       <span class="b-emoji">${b.emoji||'🏅'}</span>
       <div class="b-name">${b.name}</div>
       <div class="b-date">${fmtDate(b.earnedAt?.split('T')[0])}</div>
-      ${isOwnProfile?`<button class="badge-wear-btn ${b.id===u.wornBadgeId?'wearing':''}" onclick="toggleWearBadge('${u.id}','${b.id}')">${b.id===u.wornBadgeId?'Worn ✓':'Wear'}</button>`:''}
+      ${isOwnProfile?`<div style="display:flex;gap:4px;margin-top:6px">
+      ${[0,1,2].map(slot=>{
+        const slots=(u.wornBadges||['','','']).slice(0,3);
+        const inSlot=slots[slot]===b.id;
+        return`<button style="flex:1;font-size:8px;padding:2px 4px;border-radius:4px;border:1px solid var(--b);background:${inSlot?'var(--g)':'var(--g4)'};color:${inSlot?'#000':'var(--g3)'};cursor:pointer;font-family:Georgia,serif" onclick="setWornSlot('${u.id}','${b.id}',${slot})">${inSlot?'✓ Slot '+(slot+1):'Slot '+(slot+1)}</button>`;
+      }).join('')}
+    </div>`:''}
       ${isOwner()?`<button class="btn btn-dan btn-xs" style="margin-top:4px;width:100%" onclick="removeBadge('${u.id}','${b.id}')">Remove</button>`:''}
     </div>`).join('')}</div>`:'<div class="empty">No badges yet.</div>'}
   </div>
-  ${isOwnProfile?`<div id="pt-edit" style="display:none">
+  ${isOwnProfile?`<div id="pt-settings" style="display:none">
+    <div class="fg"><label>Change Username</label><input type="text" id="sett-username" value="${u.username||''}"></div>
+    <div class="fg"><label>New Password (leave blank to keep current)</label><input type="text" id="sett-password" placeholder="New password..."></div>
+    <div id="sett-err" class="warn-box mt8" style="display:none"></div>
+    <button class="btn btn-pri" onclick="saveSettings('${u.id}')">Save Settings</button>
+  </div>
+  <div id="pt-edit" style="display:none">
     <div class="fg"><label>Bio</label><textarea id="prof-bio" rows="4" placeholder="Write a short bio...">${u.bio||''}</textarea></div>
     ${socialFields.map(s=>`<div class="fg"><label>${s.label}</label><input type="${s.key==='discord'?'text':'url'}" id="prof-${s.key}" value="${u.links?.[s.key]||''}" placeholder="${s.key==='discord'?'Username or server link':'https://...'}"></div>`).join('')}
     <button class="btn btn-pri" onclick="saveProfileEdits('${u.id}')">Save Profile</button>
@@ -889,7 +917,7 @@ function _renderProfile(u){
   document.getElementById('profile-modal-body').innerHTML=html;
 }
 
-function _profileTab(tab,btn){document.querySelectorAll('#profile-modal-body .tab').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');['deals','badges','edit'].forEach(t=>{const el=document.getElementById('pt-'+t);if(el)el.style.display=t===tab?'':'none';});}
+function _profileTab(tab,btn){document.querySelectorAll('#profile-modal-body .tab').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');['deals','badges','edit','settings'].forEach(t=>{const el=document.getElementById('pt-'+t);if(el)el.style.display=t===tab?'':'none';});}
 function triggerAvatarUpload(){document.getElementById('avatar-file')?.click();}
 function handleAvatarUpload(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async ev=>{const u=Store.users.find(x=>x.id===_profileUserId);if(!u)return;u.avatar=ev.target.result;if(cur.id===_profileUserId){_setHdrAvatar(cur);cur.avatar=u.avatar;}await Store.saveAll();toast('Photo updated');_renderProfile(u);};reader.readAsDataURL(file);}
 async function saveProfileEdits(uid){
@@ -901,8 +929,41 @@ async function saveProfileEdits(uid){
   await Store.saveAll();toast('Profile saved');_renderProfile(u);
 }
 async function saveJoinDate(uid,val){const u=Store.users.find(x=>x.id===uid);if(!u)return;u.joinDate=val;await Store.saveAll();toast('Join date saved');}
-async function toggleWearBadge(userId,badgeId){const u=Store.users.find(x=>x.id===userId);if(!u)return;u.wornBadgeId=u.wornBadgeId===badgeId?null:badgeId;if(cur.id===userId){cur.wornBadgeId=u.wornBadgeId;_updateWornBadge();}await Store.saveAll();_renderProfile(u);toast(u.wornBadgeId?'Badge worn':'Badge removed from display');}
+async function setWornSlot(userId,badgeId,slot){
+  const u=Store.users.find(x=>x.id===userId);if(!u)return;
+  if(!u.wornBadges)u.wornBadges=['','',''];
+  // If already in this slot — remove it
+  if(u.wornBadges[slot]===badgeId){u.wornBadges[slot]='';}
+  else{
+    // Remove from any other slot first
+    u.wornBadges=u.wornBadges.map(id=>id===badgeId?'':id);
+    u.wornBadges[slot]=badgeId;
+  }
+  u.wornBadgeId=u.wornBadges[0]||null; // backward compat
+  if(cur.id===userId){cur.wornBadges=[...u.wornBadges];cur.wornBadgeId=u.wornBadgeId;_updateWornBadge();}
+  await Store.saveAll();_renderProfile(u);
+  const filled=u.wornBadges.filter(x=>x).length;
+  toast(filled?`${filled} badge${filled>1?'s':''} worn`:'Badges cleared');
+}
 function openGiveBadge(agentId){document.getElementById('gb-agent-id').value=agentId;document.getElementById('gb-emoji').value='';document.getElementById('gb-name').value='';document.getElementById('gb-note').value='';openMod('modal-give-badge');}
+
+async function saveSettings(uid){
+  const u=Store.users.find(x=>x.id===uid);if(!u)return;
+  const newUser=document.getElementById('sett-username')?.value?.trim();
+  const newPwd=document.getElementById('sett-password')?.value?.trim();
+  const errEl=document.getElementById('sett-err');if(errEl)errEl.style.display='none';
+  if(!newUser){if(errEl){errEl.textContent='Username cannot be empty.';errEl.style.display='block';}return;}
+  // Check duplicate username
+  const duplicate=Store.users.find(x=>x.username.toLowerCase()===newUser.toLowerCase()&&x.id!==uid);
+  if(duplicate){if(errEl){errEl.textContent='That username is already taken.';errEl.style.display='block';}return;}
+  u.username=newUser;
+  if(newPwd)u.pwd=newPwd;
+  if(cur.id===uid){cur.username=newUser;if(newPwd)cur.pwd=newPwd;}
+  await Store.saveAll();
+  toast('Settings saved');
+  _renderProfile(u);
+}
+
 async function giveBadge(){
   const agentId=document.getElementById('gb-agent-id').value;const emoji=document.getElementById('gb-emoji').value.trim();const name=document.getElementById('gb-name').value.trim();
   if(!name){toast('Badge name required');return;}const u=Store.users.find(x=>x.agentId===agentId);if(!u)return;
@@ -920,7 +981,6 @@ function renderPersonalGoals(){
   const card=document.getElementById('personal-goals-card');
   const list=document.getElementById('personal-goals-list');
   if(!card||!list)return;
-  // Only show if agent has an agentId (owner without agentId skips)
   if(!cur.agentId){card.style.display='none';return;}
   card.style.display='';
   const myGoals=Store.personalGoals.filter(g=>g.agentId===cur.agentId);
@@ -1005,6 +1065,77 @@ async function deleteGoal(id){
   const ok=await showConfirm('Remove Goal','Remove this personal goal?','Remove');if(!ok)return;
   const idx=Store.personalGoals.findIndex(x=>x.id===id);if(idx>-1)Store.personalGoals.splice(idx,1);
   await Store.saveAll();renderPersonalGoals();toast('Goal removed');
+}
+
+
+// ── CHARGEBACKS & PERSISTENCY ──────────────────────────────────
+function renderChargebackSection(){
+  if(!cur.agentId)return;
+  const card=document.getElementById('chargeback-card');if(!card)return;
+  card.style.display='';
+  // Persistency pies
+  const months=[2,6,9,12];
+  const pieCont=document.getElementById('persistency-charts');
+  if(pieCont){
+    pieCont.innerHTML=months.map(m=>{
+      const score=Store.persistencyScore(cur.agentId,m);
+      if(score===null)return`<div class="persist-card"><div class="persist-label">${m}-Month</div><div style="font-size:12px;color:var(--d);margin-top:8px">Not enough data</div></div>`;
+      const cls=score>=85?'good':score>=70?'warn':'bad';
+      const r=36,circ=2*Math.PI*r,dash=circ*(score/100),gap=circ-dash;
+      return`<div class="persist-card">
+        <div class="persist-pie">
+          <svg width="90" height="90" viewBox="0 0 90 90">
+            <circle cx="45" cy="45" r="${r}" fill="none" stroke="rgba(201,168,76,0.12)" stroke-width="10"/>
+            <circle cx="45" cy="45" r="${r}" fill="none" stroke="${score>=85?'#81c784':score>=70?'#fbbf24':'#e57373'}" stroke-width="10" stroke-dasharray="${dash.toFixed(1)} ${gap.toFixed(1)}" stroke-linecap="round"/>
+          </svg>
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:15px;font-weight:700;color:${score>=85?'#81c784':score>=70?'#fbbf24':'#e57373'}">${score}%</div>
+        </div>
+        <div class="persist-label">${m === 12 ? '1-Year' : m+'-Month'} Persistency</div>
+      </div>`;
+    }).join('');
+  }
+  // Chargeback list
+  const myCBs=[...Store.chargebacks.filter(cb=>cb.agentId===cur.agentId)].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const cbList=document.getElementById('chargeback-list');
+  if(cbList){
+    cbList.innerHTML=myCBs.length?`<div class="ct" style="margin-top:12px">Chargeback History</div>`+myCBs.map(cb=>`<div class="cb-row">
+      <div class="flsb"><div><div class="fw7 text-rd">${fmtFull(cb.mp*12)} AP Lost</div>
+      <div class="deal-meta">${fmtDate(cb.date)} · ${cb.policyType||''} ${cb.carrier?'· '+cb.carrier:''}</div>
+      ${cb.notes?`<div style="font-size:11px;color:var(--d);margin-top:3px">${cb.notes}</div>`:''}</div>
+      <button class="btn btn-dan btn-xs" onclick="delChargeback('${cb.id}')">Remove</button></div>
+    </div>`).join(''):'<div class="text-xs text-d" style="margin-top:8px;padding:8px">No chargebacks recorded.</div>';
+  }
+}
+
+function openChargeback(){
+  document.getElementById('cb-id').value='';
+  document.getElementById('cb-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('cb-ptype').value='';
+  document.getElementById('cb-carrier').value='';
+  document.getElementById('cb-mp').value='';
+  document.getElementById('cb-notes').value='';
+  openMod('modal-chargeback');
+}
+
+async function submitChargeback(){
+  const mp=parseFloat(document.getElementById('cb-mp').value)||0;
+  const date=document.getElementById('cb-date').value;
+  if(!date){toast('Date required');return;}
+  if(!cur.agentId){toast('Not linked to agent account');return;}
+  Store.chargebacks.push({
+    id:Store.uid(),agentId:cur.agentId,agentName:cur.agentName,
+    date,mp,policyType:document.getElementById('cb-ptype').value,
+    carrier:document.getElementById('cb-carrier').value,
+    notes:document.getElementById('cb-notes').value.trim(),
+    createdAt:new Date().toISOString()
+  });
+  await Store.saveAll();closeMod('modal-chargeback');renderChargebackSection();toast('Chargeback recorded');
+}
+
+async function delChargeback(id){
+  const ok=await showConfirm('Remove Chargeback','Remove this chargeback?','Remove');if(!ok)return;
+  const idx=Store.chargebacks.findIndex(x=>x.id===id);if(idx>-1)Store.chargebacks.splice(idx,1);
+  await Store.saveAll();renderChargebackSection();toast('Removed');
 }
 
 // ── RECRUIT POSTS ──────────────────────────────────────────────

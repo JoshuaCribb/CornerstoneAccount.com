@@ -254,6 +254,38 @@ html,body{height:100%;background:#000000;color:var(--t);font-family:'Georgia',se
 .text-xs{font-size:10px}.text-sm{font-size:11px}
 .empty{text-align:center;padding:32px;color:var(--d);font-size:12px}
 
+
+/* ── PWA / MOBILE APP CHROME ─────────────────────────────── */
+/* Push content above mobile browser bottom bar */
+body{padding-bottom:env(safe-area-inset-bottom)}
+/* Prevent pull-to-refresh and overscroll */
+html{overscroll-behavior:none}
+body{overscroll-behavior:none;-webkit-overflow-scrolling:touch}
+/* Status bar color for Android Chrome */
+@media(display-mode:standalone){
+  .app-hdr{padding-top:env(safe-area-inset-top)}
+}
+
+/* ── BADGE SLOTS (3 wearable) ────────────────────────────── */
+.badge-slots{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.badge-slot{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:var(--g4);border:1px solid var(--b);border-radius:12px;font-size:12px;cursor:pointer;transition:background .15s}
+.badge-slot:hover{background:rgba(201,168,76,.2)}
+.badge-slot.empty{color:var(--d);border-style:dashed;font-size:10px}
+.badge-slot-label{font-size:9px;color:var(--d2)}
+
+/* ── CHARGEBACK / PERSISTENCY ────────────────────────────── */
+.cb-row{background:var(--p2);border:1px solid var(--b);border-radius:9px;padding:11px 14px;margin-bottom:7px}
+.persistency-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:600px){.persistency-grid{grid-template-columns:1fr}}
+.persist-card{background:var(--p1);border:1px solid var(--b);border-radius:10px;padding:14px;text-align:center}
+.persist-score{font-size:32px;font-weight:700;line-height:1}
+.persist-score.good{color:#81c784}
+.persist-score.warn{color:#fbbf24}
+.persist-score.bad{color:#e57373}
+.persist-label{font-size:10px;color:var(--d);margin-top:4px;text-transform:uppercase;letter-spacing:1px}
+.persist-pie{position:relative;width:90px;height:90px;margin:10px auto}
+.persist-pie svg{transform:rotate(-90deg)}
+
 /* ── TOAST & SYNC ─────────────────────────── */
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--p1);border:1px solid var(--b2);border-radius:8px;padding:9px 18px;font-size:12px;font-weight:700;color:var(--g);z-index:9999;display:none;white-space:nowrap;font-family:'Georgia',serif;pointer-events:none}
 .toast.show{display:block;animation:fadeUp .25s}
@@ -263,6 +295,8 @@ html,body{height:100%;background:#000000;color:var(--t);font-family:'Georgia',se
 
 /* ── MOBILE ─────────────────────────────────── */
 @media(max-width:768px){
+  #app{min-height:100dvh}
+  .view-wrap{padding-bottom:calc(20px + env(safe-area-inset-bottom))}
   /* iOS zooms on inputs smaller than 16px — this prevents it */
   input,select,textarea{font-size:16px!important}
   .app-hdr{height:44px;padding:0 8px;position:relative;overflow:visible}

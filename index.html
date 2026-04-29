@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cornerstone">
+<meta name="theme-color" content="#000000">
+<link rel="apple-touch-icon" href="assets/icon.png">
+<link rel="manifest" href="manifest.json">
 <title>Cornerstone Council</title>
 <link rel="stylesheet" href="style.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -14,7 +21,7 @@
 <!-- LOGIN -->
 <div id="login-page">
   <div class="login-wrap">
-    <div class="login-logo-wrap"><img src="assets/agentlogo.png" alt="Cornerstone Council"></div>
+    <div class="login-logo-wrap"><img src="assets/icon.png" alt="Cornerstone Council"></div>
     <div class="login-card">
       <div class="login-sub">Agent Portal</div>
       <div class="fg"><label>Username</label><input id="l-user" type="text" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"></div>
@@ -94,8 +101,7 @@
             <button class="tf-btn" onclick="setTF('dash','ytd',this)">YTD</button>
           </div>
         </div>
-        <div class="stat-grid" id="dash-stats"></div>
-        <!-- Personal Goals — above referrals -->
+        <!-- Personal Goals — ABOVE stats -->
         <div class="card" id="personal-goals-card">
           <div class="flsb" style="margin-bottom:10px">
             <div class="ct" style="margin:0">Personal Goals <span class="badge badge-grey" style="font-size:8px">Private</span></div>
@@ -103,6 +109,7 @@
           </div>
           <div id="personal-goals-list"></div>
         </div>
+        <div class="stat-grid" id="dash-stats"></div>
         <div id="my-commission-card"></div>
         <div class="card"><div class="ct">My Deals</div><div id="my-deals-list"></div></div>
         <div class="card">
@@ -111,6 +118,15 @@
             <button class="btn btn-ghost btn-sm" onclick="openLeadSpend()">+ Add Lead Spend</button>
           </div>
           <div id="my-spend-list"></div>
+        </div>
+        <!-- Chargebacks + Persistency -->
+        <div class="card" id="chargeback-card">
+          <div class="flsb" style="margin-bottom:10px">
+            <div class="ct" style="margin:0">Chargebacks &amp; Persistency <span class="badge badge-grey" style="font-size:8px">Private</span></div>
+            <button class="btn btn-ghost btn-sm" onclick="openChargeback()">+ Report Chargeback</button>
+          </div>
+          <div class="persistency-grid" id="persistency-charts"></div>
+          <div id="chargeback-list"></div>
         </div>
         <!-- Recruit Posts (private) -->
         <div class="card" id="recruit-posts-card" style="display:none">
@@ -157,6 +173,7 @@
             </div>
             <div class="tf-custom" id="teams-custom"><input type="date" id="teams-cs" onchange="renderTeams()"><span style="color:var(--d)">to</span><input type="date" id="teams-ce" onchange="renderTeams()"></div>
           </div>
+          <div class="info-box" style="font-size:10px;margin-top:8px">Default view: <strong>Monthly</strong> — change with buttons above</div>
         </div>
         <div id="teams-body"></div>
       </div>
@@ -476,6 +493,38 @@
     </div>
   </div>
 </div>
+
+
+<!-- CHARGEBACK MODAL -->
+<div class="modal-ov" id="modal-chargeback">
+  <div class="modal">
+    <div class="modal-title" id="cb-modal-ttl">Report Chargeback</div>
+    <div class="info-box">Chargebacks reduce your persistency score. Track them here privately.</div>
+    <div class="fg"><label>Date of Chargeback</label><input type="date" id="cb-date"></div>
+    <div class="fg"><label>Policy Type</label>
+      <select id="cb-ptype"><option value="">Select...</option><option>FEX</option><option>Whole Life</option><option>IUL</option><option>Term Life</option><option>Annuity</option></select>
+    </div>
+    <div class="fg"><label>Carrier</label>
+      <select id="cb-carrier">
+        <option value="">Select...</option>
+        <option>American Amicable</option><option>United Home Life</option><option>Royal Neighbors</option>
+        <option>American Home Life</option><option>Baltimore</option><option>Kansas City Life</option>
+        <option>Transamerica</option><option>Mutual of Omaha</option><option>Polish Falcons</option>
+        <option>Aetna</option><option>Ethos</option><option>Corebridge</option>
+        <option>NLG</option><option>Lafayette</option><option>Mutual Trust</option>
+      </select>
+    </div>
+    <div class="fg"><label>Monthly Premium Lost ($)</label><input type="number" id="cb-mp" min="0" step="0.01" placeholder="0.00"></div>
+    <div class="fg"><label>Notes (optional)</label><textarea id="cb-notes" rows="2" placeholder="Reason, client name, etc."></textarea></div>
+    <input type="hidden" id="cb-id">
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeMod('modal-chargeback')">Cancel</button>
+      <button class="btn btn-pri" onclick="submitChargeback()">Save Chargeback</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL (in profile) - handled inline -->
 
 <!-- FIREBASE INFO -->
 <div class="modal-ov" id="modal-gh">
