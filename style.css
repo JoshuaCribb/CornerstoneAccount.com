@@ -263,6 +263,8 @@ html,body{height:100%;background:#000000;color:var(--t);font-family:'Georgia',se
 
 /* ── MOBILE ─────────────────────────────────── */
 @media(max-width:768px){
+  /* iOS zooms on inputs smaller than 16px — this prevents it */
+  input,select,textarea{font-size:16px!important}
   .app-hdr{height:44px;padding:0 8px;position:relative;overflow:visible}
   .hdr-logo{height:22px;top:50%;transform:translate(-50%,-50%);position:absolute;z-index:1}
   .hdr-left{z-index:2;gap:4px}

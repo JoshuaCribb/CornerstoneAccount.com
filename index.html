@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Cornerstone Council</title>
 <link rel="stylesheet" href="style.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -353,15 +353,10 @@
         <option value="team">Team Production</option>
       </select>
     </div>
-    <div class="fg"><label>Metric to Track</label>
-      <select id="inc-metric">
-        <option value="ap">AP (Annualized Premium)</option>
-        <option value="deals">Deals Submitted</option>
-        <option value="referrals">Total Referrals (beneficiary)</option>
-        <option value="warmmarket">Warm Market Closes</option>
-        <option value="days">Days Posted a Deal</option>
-        <option value="recruits">Recruits Added</option>
-      </select>
+    <div class="fg">
+      <label style="font-size:10px;color:var(--d2);letter-spacing:.5px;text-transform:uppercase;font-weight:700;margin-bottom:6px;display:block">Metrics to Track — All must be met to earn badge</label>
+      <div id="inc-metrics-container"></div>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="addMetricRow()" style="margin-top:4px">+ Add Another Metric</button>
     </div>
     <div class="fr2">
       <div class="fg"><label>Title</label><input type="text" id="inc-title" placeholder="e.g. April Top Producer"></div>
@@ -381,7 +376,6 @@
       <div class="fg"><label>Start Date</label><input type="date" id="inc-start"></div>
       <div class="fg"><label>End Date</label><input type="date" id="inc-end"></div>
     </div>
-    <div class="fg"><label>Goal (0 is valid — means any activity counts)</label><input type="number" id="inc-goal" min="0" placeholder="e.g. 50000 or 0"></div>
     <div class="fg"><label>Reward / Prize</label><input type="text" id="inc-reward" placeholder="e.g. $500 bonus, trip..."></div>
     <div class="fg"><label>Description</label><textarea id="inc-desc" placeholder="Details..."></textarea></div>
     <input type="hidden" id="inc-id">

@@ -474,13 +474,20 @@ function renderIncentives(){
   sorted.forEach(inc=>{
     const isActive=(!inc.endDate||inc.endDate>=now)&&(!inc.startDate||inc.startDate<=now);
     const goal=parseFloat(inc.goal)||0;const scope=inc.scope||'agency';const metric=inc.metric||'ap';
-    const current=Store.incProgress(inc,cur.agentId);
-    const pct=goal>0?Math.min(100,Math.round((current/goal)*100)):current>0?100:0;
-    const canRedeem=current>=goal&&(goal>0||current>0)&&cur.agentId;
+    // Multi-metric progress
+    const allProgress=Store.incProgressAll(inc,cur.agentId);
+    const allMet=allProgress.every(p=>p.current>=p.goal||(p.goal===0&&p.current>=0));
+    const canRedeem=allMet&&cur.agentId;
     const alreadyEarned=canRedeem&&(cur.badges||[]).some(b=>b.incId===inc.id);
-    const isAP=metric==='ap';
-    const currentFmt=isAP?fmtFull(current):fmtNum(current);
-    const goalFmt=isAP?fmtFull(goal):fmtNum(goal);
+    const progressBars=allProgress.map(p=>{
+      const isAP=p.metric==='ap';
+      const pct=p.goal>0?Math.min(100,Math.round((p.current/p.goal)*100)):p.current>0?100:0;
+      const cur_fmt=isAP?fmtFull(p.current):fmtNum(p.current);
+      const goal_fmt=isAP?fmtFull(p.goal):fmtNum(p.goal);
+      return`<div style="font-size:10px;color:var(--d2);margin-top:4px">${metricLabels[p.metric]||p.metric}: ${goal_fmt}</div>
+        <div class="inc-prog-wrap"><div class="inc-prog-fill" style="width:${pct}%${!isAP?';background:linear-gradient(90deg,#27ae60,#81c784)':''}"></div></div>
+        <div style="font-size:10px;color:var(--d2)">${cur_fmt} / ${goal_fmt} — ${pct}%</div>`;
+    }).join('');
     html+=`<div class="inc-card ${isActive?'inc-active':''}">
       <div class="inc-emoji">${inc.emoji||'🏆'}</div>
       <div class="fl" style="gap:5px;flex-wrap:wrap">
@@ -490,10 +497,8 @@ function renderIncentives(){
       </div>
       <div class="inc-title">${inc.title}</div>
       <div class="inc-reward">&#127942; ${inc.reward}</div>
-      <div style="font-size:10px;color:var(--d2)">${metricLabels[metric]||metric}: ${goalFmt}</div>
-      <div class="inc-prog-wrap"><div class="inc-prog-fill" style="width:${pct}%"></div></div>
-      <div style="font-size:10px;color:var(--d2)">${currentFmt} / ${goalFmt} — ${pct}%</div>
-      ${inc.desc?`<div style="font-size:10px;color:var(--d);line-height:1.5">${inc.desc}</div>`:''}
+      ${progressBars}
+      ${inc.desc?`<div style="font-size:10px;color:var(--d);line-height:1.5;margin-top:4px">${inc.desc}</div>`:''}
       ${canRedeem&&!alreadyEarned?`<button class="redeem-btn" onclick="redeemInc('${inc.id}')">&#9650; Redeem ${inc.emoji||'🏆'} Badge</button>`:''}
       ${alreadyEarned?`<div style="font-size:10px;color:#81c784;margin-top:4px">&#10003; Badge earned</div>`:''}
       ${isOwner()?`<div class="fl" style="margin-top:8px"><button class="btn btn-ghost btn-xs" onclick="editInc('${inc.id}')">Edit</button><button class="btn btn-dan btn-xs" onclick="delInc('${inc.id}')">Remove</button></div>`:''}
@@ -515,10 +520,10 @@ async function redeemInc(incId){
 
 function openAddInc(){
   document.getElementById('inc-modal-ttl').textContent='Add Incentive';
-  ['inc-id','inc-title','inc-goal','inc-reward','inc-desc','inc-emoji','inc-badge-title'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['inc-id','inc-title','inc-reward','inc-desc','inc-emoji','inc-badge-title'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('inc-tf').value='monthly';document.getElementById('inc-scope').value='agency';
-  document.getElementById('inc-metric').value='ap';
   document.getElementById('inc-start').value=new Date().toISOString().split('T')[0];document.getElementById('inc-end').value='';
+  _resetMetricRows([{metric:'ap',goal:''}]);
   openMod('modal-inc');
 }
 function editInc(id){
@@ -526,17 +531,60 @@ function editInc(id){
   document.getElementById('inc-modal-ttl').textContent='Edit Incentive';
   document.getElementById('inc-id').value=id;document.getElementById('inc-title').value=inc.title||'';
   document.getElementById('inc-tf').value=inc.timeframe||'monthly';document.getElementById('inc-scope').value=inc.scope||'agency';
-  document.getElementById('inc-metric').value=inc.metric||'ap';
   document.getElementById('inc-start').value=inc.startDate||'';document.getElementById('inc-end').value=inc.endDate||'';
-  document.getElementById('inc-goal').value=inc.goal!==undefined?inc.goal:'';
   document.getElementById('inc-reward').value=inc.reward||'';document.getElementById('inc-desc').value=inc.desc||'';
   document.getElementById('inc-emoji').value=inc.emoji||'';document.getElementById('inc-badge-title').value=inc.badgeTitle||'';
+  const metrics=inc.metrics&&inc.metrics.length?inc.metrics:[{metric:inc.metric||'ap',goal:inc.goal||0}];
+  _resetMetricRows(metrics);
   openMod('modal-inc');
 }
+
+const METRIC_OPTIONS=`
+  <option value="ap">AP (Annualized Premium)</option>
+  <option value="deals">Deals Submitted</option>
+  <option value="referrals">Referrals (beneficiary)</option>
+  <option value="warmmarket">Warm Market Closes</option>
+  <option value="days">Days Posted a Deal</option>
+  <option value="recruits">Recruits Added</option>`;
+
+function _metricRowHtml(m,g,idx){
+  return`<div class="inc-metric-row" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;background:var(--p2);border:1px solid var(--b);border-radius:7px;padding:8px 10px">
+    <div style="flex:1"><label style="font-size:9px;color:var(--d2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Metric ${idx+1}</label>
+    <select class="metric-select" style="background:var(--p2);border:1px solid var(--b);border-radius:6px;padding:6px 10px;color:var(--t);font-size:12px;font-family:Georgia,serif;outline:none;width:100%">${METRIC_OPTIONS}</select></div>
+    <div style="width:100px"><label style="font-size:9px;color:var(--d2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Goal</label>
+    <input type="number" class="metric-goal" min="0" value="${g!==undefined?g:''}" placeholder="0" style="background:var(--p2);border:1px solid var(--b);border-radius:6px;padding:6px 10px;color:var(--t);font-size:12px;font-family:Georgia,serif;outline:none;width:100%"></div>
+    ${idx>0?`<button type="button" onclick="this.closest('.inc-metric-row').remove()" style="background:var(--rdim);color:#e57373;border:1px solid rgba(192,57,43,.3);border-radius:5px;padding:4px 8px;font-size:10px;cursor:pointer;margin-top:14px">✕</button>`:'<div style="width:28px"></div>'}
+  </div>`;
+}
+
+function _resetMetricRows(metrics){
+  const container=document.getElementById('inc-metrics-container');
+  if(!container)return;
+  container.innerHTML=metrics.map((m,i)=>_metricRowHtml(m.metric,m.goal,i)).join('');
+  // Set select values after render
+  const rows=container.querySelectorAll('.inc-metric-row');
+  rows.forEach((row,i)=>{const sel=row.querySelector('.metric-select');if(sel&&metrics[i])sel.value=metrics[i].metric||'ap';});
+}
+
+function addMetricRow(){
+  const container=document.getElementById('inc-metrics-container');
+  if(!container)return;
+  const idx=container.querySelectorAll('.inc-metric-row').length;
+  container.insertAdjacentHTML('beforeend',_metricRowHtml('ap','',idx));
+}
+
 async function saveInc(){
   const id=document.getElementById('inc-id').value;
-  const goalVal=document.getElementById('inc-goal').value;
-  const obj={id:id||Store.uid(),title:document.getElementById('inc-title').value.trim(),timeframe:document.getElementById('inc-tf').value,scope:document.getElementById('inc-scope').value,metric:document.getElementById('inc-metric').value,startDate:document.getElementById('inc-start').value,endDate:document.getElementById('inc-end').value,goal:goalVal===''?0:parseFloat(goalVal)||0,reward:document.getElementById('inc-reward').value.trim(),desc:document.getElementById('inc-desc').value.trim(),emoji:document.getElementById('inc-emoji').value.trim(),badgeTitle:document.getElementById('inc-badge-title').value.trim(),createdAt:new Date().toISOString()};
+  // Collect all metric rows
+  const metricRows=document.querySelectorAll('.inc-metric-row');
+  const metrics=[];
+  metricRows.forEach(row=>{
+    const m=row.querySelector('.metric-select')?.value||'ap';
+    const g=row.querySelector('.metric-goal')?.value||'0';
+    metrics.push({metric:m,goal:parseFloat(g)||0});
+  });
+  if(!metrics.length)metrics.push({metric:'ap',goal:0});
+  const obj={id:id||Store.uid(),title:document.getElementById('inc-title').value.trim(),timeframe:document.getElementById('inc-tf').value,scope:document.getElementById('inc-scope').value,metrics,metric:metrics[0].metric,goal:metrics[0].goal,startDate:document.getElementById('inc-start').value,endDate:document.getElementById('inc-end').value,reward:document.getElementById('inc-reward').value.trim(),desc:document.getElementById('inc-desc').value.trim(),emoji:document.getElementById('inc-emoji').value.trim(),badgeTitle:document.getElementById('inc-badge-title').value.trim(),createdAt:new Date().toISOString()};
   if(!obj.title){toast('Title required');return;}
   if(id){const idx=Store.incentives.findIndex(x=>x.id===id);if(idx>-1)Store.incentives.splice(idx,1,{...Store.incentives[idx],...obj});}
   else Store.incentives.push(obj);
@@ -718,9 +766,15 @@ function downloadMonthlyReport(monthKey){
 let _profileAgentId=null,_profileUserId=null;
 function openProfile(agentId,e,fallbackUserId){
   if(e&&e.stopPropagation)e.stopPropagation();
+  Store.loadLocal();
   _profileAgentId=agentId||null;
-  let u=agentId?Store.users.find(x=>x.agentId===agentId):null;
-  if(!u&&fallbackUserId)u=Store.users.find(x=>x.id===fallbackUserId);
+  let u=null;
+  if(agentId&&agentId!=='null'&&agentId!=='undefined'){
+    u=Store.users.find(x=>x.agentId===agentId);
+  }
+  if(!u&&fallbackUserId&&fallbackUserId!=='null'&&fallbackUserId!=='undefined'){
+    u=Store.users.find(x=>x.id===fallbackUserId);
+  }
   _profileUserId=u?.id||null;
   if(!u){toast('Profile not found');return;}
   _renderProfile(u);openMod('modal-profile');
@@ -740,7 +794,6 @@ function _renderProfile(u){
   const links=socialFields.filter(s=>u.links?.[s.key]).map(s=>{let href=u.links[s.key];if(s.key!=='discord'&&!/^https?:\/\//i.test(href))href='https://'+href;return`<a href="${s.key==='discord'?'#':href}" target="${s.key==='discord'?'_self':'_blank'}" rel="noopener" class="social-link">${s.label}</a>`;}).join('');
   const worn=(u.badges||[]).find(b=>b.id===u.wornBadgeId);
   document.getElementById('profile-modal-title').textContent=u.agentName||u.username;
-  document.getElementById('profile-modal-title').textContent=dispTitle;
   const tabs=[{id:'deals',label:'Deals'},{id:'badges',label:`Badges${(u.badges||[]).length?' ('+u.badges.length+')':''}`},...(isOwnProfile?[{id:'edit',label:'Edit Profile'}]:[])];
   let html=`<div class="profile-hero">
     <div class="profile-av-lg" ${isOwnProfile?'onclick="triggerAvatarUpload()"':''}>

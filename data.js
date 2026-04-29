@@ -215,26 +215,40 @@ const Store = (() => {
     const u=state.users.find(x=>x.id===userId);
     return(u?.badges||[]).some(b=>b.id==='birthday-warrior-'+userId||b.birthdayWarrior===true);
   }
-  function incProgress(inc,agentId){
+  function _calcOneMetric(metric,myDeals,inc,agentId,scope){
+    if(metric==='ap'){
+      if(inc.id==='amam-trip-winner')return totalAP(myDeals.filter(d=>d.carrier==='American Amicable'));
+      return totalAP(myDeals);
+    }
+    if(metric==='deals')return myDeals.length;
+    if(metric==='referrals')return totalReferrals(myDeals);
+    if(metric==='warmmarket')return myDeals.filter(d=>d.leadType==='Warm Market').length;
+    if(metric==='days'){const days=new Set(myDeals.map(d=>d.date));return days.size;}
+    if(metric==='recruits'){
+      const rPosts=filterByTF(state.recruitPosts.filter(p=>scope==='personal'?p.agentId===agentId:true),'custom','date',inc.startDate||null,inc.endDate||null);
+      return rPosts.length;
+    }
+    return 0;
+  }
+
+  // Returns [{metric, goal, current}] — supports multi-metric incentives
+  function incProgressAll(inc,agentId){
     const tfD=filterByTF(state.deals,'custom','date',inc.startDate||null,inc.endDate||null);
     const scope=inc.scope||'agency';
     let myDeals=[];
     if(scope==='agency')myDeals=tfD;
     else if(scope==='personal')myDeals=agentId?tfD.filter(d=>d.agentId===agentId):[];
     else if(scope==='team'){const tIds=agentId?[agentId,...getDownlineIds(agentId)]:[];myDeals=tfD.filter(d=>tIds.includes(d.agentId));}
+    const metrics=inc.metrics&&inc.metrics.length?inc.metrics:[{metric:inc.metric||'ap',goal:inc.goal||0}];
+    return metrics.map(m=>({
+      metric:m.metric||'ap',
+      goal:parseFloat(m.goal)||0,
+      current:_calcOneMetric(m.metric||'ap',myDeals,inc,agentId,scope)
+    }));
+  }
 
-    const metric=inc.metric||'ap';
-    let current=0;
-    if(metric==='ap')current=totalAP(myDeals);
-    else if(metric==='deals')current=myDeals.length;
-    else if(metric==='referrals')current=totalReferrals(myDeals);
-    else if(metric==='warmmarket')current=myDeals.filter(d=>d.leadType==='Warm Market').length;
-    else if(metric==='days'){const days=new Set(myDeals.map(d=>d.date));current=days.size;}
-    else if(metric==='recruits'){
-      const rPosts=filterByTF(state.recruitPosts.filter(p=>scope==='personal'?p.agentId===agentId:true),'custom','date',inc.startDate||null,inc.endDate||null);
-      current=rPosts.length;
-    }
-    return current;
+  function incProgress(inc,agentId){
+    return (incProgressAll(inc,agentId)[0]||{}).current||0;
   }
 
   return{
@@ -251,6 +265,6 @@ const Store = (() => {
     loadLocal,saveLocal,saveAll,saveCRM,syncFromGH,pushToGH,DEF_USERS,SEED_MEMBERS,
     undo,redo,pushUndo,updateUndoBtns,
     uid,getAgentUsers,getMember,getDownlineIds,isManager,isBirthday,hasBirthdayWarriorBadge,
-    totalAP,totalMP,totalReferrals,agN,getMondayOf,filterByTF,buildLB,incProgress,
+    totalAP,totalMP,totalReferrals,agN,getMondayOf,filterByTF,buildLB,incProgress,incProgressAll,
   };
 })();
