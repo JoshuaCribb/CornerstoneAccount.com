@@ -637,11 +637,13 @@ async function saveInc(){
     metrics.push({metric:m,goal:parseFloat(g)||0});
   });
   if(!metrics.length)metrics.push({metric:'ap',goal:0});
-  const obj={id:id||Store.uid(),title:document.getElementById('inc-title').value.trim(),timeframe:document.getElementById('inc-tf').value,scope:document.getElementById('inc-scope').value,metrics,metric:metrics[0].metric,goal:metrics[0].goal,startDate:document.getElementById('inc-start').value,endDate:document.getElementById('inc-end').value,reward:document.getElementById('inc-reward').value.trim(),desc:document.getElementById('inc-desc').value.trim(),emoji:document.getElementById('inc-emoji').value.trim(),badgeTitle:document.getElementById('inc-badge-title').value.trim(),createdAt:new Date().toISOString()};
+  const _hidCb=document.getElementById('inc-hidden');
+  const isHidden=_hidCb?_hidCb.checked:false;
+  const obj={id:id||Store.uid(),title:document.getElementById('inc-title').value.trim(),timeframe:document.getElementById('inc-tf').value,scope:document.getElementById('inc-scope').value,metrics,metric:metrics[0].metric,goal:metrics[0].goal,startDate:document.getElementById('inc-start').value,endDate:document.getElementById('inc-end').value,reward:document.getElementById('inc-reward').value.trim(),desc:document.getElementById('inc-desc').value.trim(),emoji:document.getElementById('inc-emoji').value.trim(),badgeTitle:document.getElementById('inc-badge-title').value.trim(),hidden:isHidden,createdAt:new Date().toISOString()};
   if(!obj.title){toast('Title required');return;}
   if(id){const idx=Store.incentives.findIndex(x=>x.id===id);if(idx>-1)Store.incentives.splice(idx,1,{...Store.incentives[idx],...obj});}
   else Store.incentives.push(obj);
-  await Store.saveAll();closeMod('modal-inc');renderIncentives();toast('Incentive saved');
+  await Store.saveAll();closeMod('modal-inc');renderIncentives(isHidden?'hidden':'active');toast('Incentive saved');
 }
 async function delInc(id){const ok=await showConfirm('Remove Incentive','Remove this incentive?','Remove');if(!ok)return;const idx=Store.incentives.findIndex(x=>x.id===id);if(idx>-1)Store.incentives.splice(idx,1);await Store.saveAll();renderIncentives();toast('Removed');}
 
