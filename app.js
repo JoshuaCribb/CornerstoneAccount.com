@@ -382,7 +382,9 @@ function renderTeams(){
     return{u,personalAP:Store.totalAP(myD),teamAP:Store.totalAP(myD)+Store.totalAP(downD),downUsers,myD,downD};
   }).sort((a,b)=>b.teamAP-a.teamAP);
   const myDownIds=cur.agentId?Store.getDownlineIds(cur.agentId):[];
-  const viewable=isAdmin()?teamData:teamData.filter(td=>td.u.agentId===cur.agentId||myDownIds.includes(td.u.agentId));
+  // Only show agents who have at least one downline with a portal account
+  const teamsOnly=teamData.filter(td=>td.downUsers.length>0);
+  const viewable=isAdmin()?teamsOnly:teamsOnly.filter(td=>td.u.agentId===cur.agentId||myDownIds.includes(td.u.agentId));
   viewable.forEach(({u,personalAP,teamAP,downUsers,myD,downD})=>{
     const m=Store.getMember(u.agentId);const avImg=u.avatar?`<img src="${u.avatar}" alt="">`:initials(u.agentName);
     const allTeamDeals=[...myD,...downD].sort((a,b)=>new Date(b.date)-new Date(a.date));
@@ -414,7 +416,7 @@ function renderTeams(){
         </div>`:''}
       </div></div>`;
   });
-  if(!viewable.length)html+='<div class="empty">No team data available.</div>';
+  if(!viewable.length)html+='<div class="empty">No teams yet. Agents appear here automatically once they have a downline.</div>';
   document.getElementById('teams-body').innerHTML=html;
 }
 function toggleTeam(id){document.getElementById('tc-'+id)?.classList.toggle('open');}
