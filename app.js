@@ -31,6 +31,31 @@ function toast(msg){const t=document.getElementById('toast');if(!t)return;t.text
 function openMod(id){const el=document.getElementById(id);if(el)el.classList.add('open');}
 function closeMod(id){const el=document.getElementById(id);if(el)el.classList.remove('open');}
 
+
+// Returns worn badge emoji + birthday cake if applicable for an agentId
+function agentBadgeDisplay(agentId, dealDate){
+  const u = Store.users.find(x=>x.agentId===agentId);
+  if(!u) return '';
+  let icons = '';
+  // Birthday cake — show if deal was posted on their birthday
+  if(dealDate){
+    const m = Store.getMember(agentId);
+    if(m?.dob){
+      const dob = new Date(m.dob+'T12:00:00');
+      const dd = new Date(dealDate+'T12:00:00');
+      if(dob.getMonth()===dd.getMonth()&&dob.getDate()===dd.getDate()){
+        icons += `<span title="Posted on their birthday!" style="font-size:13px;margin-right:2px">🎂</span>`;
+      }
+    }
+  }
+  // Worn badge
+  if(u.wornBadgeId){
+    const badge=(u.badges||[]).find(b=>b.id===u.wornBadgeId);
+    if(badge) icons += `<span class="worn-badge-icon" style="font-size:13px;margin-right:2px">${badge.emoji||'🏅'}<span class="badge-tooltip">${badge.name}</span></span>`;
+  }
+  return icons;
+}
+
 // ── CONFIRM DIALOG ─────────────────────────────────────────────
 let _confirmResolve=null;
 function showConfirm(title,msg,okLabel='Confirm',danger=true){
@@ -57,6 +82,9 @@ function _stopActivity(){clearTimeout(_inactivityTimer);['mousemove','mousedown'
 document.addEventListener('DOMContentLoaded',()=>{
   document.querySelectorAll('.modal-ov').forEach(ov=>ov.addEventListener('click',e=>{if(e.target===ov)ov.classList.remove('open');}));
   Store.loadLocal();GH.load();
+  // Hide dashboard from owner
+  const dashTab=Array.from(document.querySelectorAll('.tab')).find(t=>(t.getAttribute('onclick')||'').includes("'dashboard'"));
+  if(dashTab)dashTab.style.display=isOwner()?'none':'';
   document.getElementById('pd-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('sp-week').value=Store.getMondayOf(new Date().toISOString().split('T')[0]);
   document.addEventListener('keydown',e=>{
@@ -95,7 +123,7 @@ function enterApp(){
   document.getElementById('app').style.display='flex';
   const nm=cur.agentName||cur.username;
   _setHdrAvatar(cur);
-  document.getElementById('hdr-nm').textContent=nm.split(' ')[0];
+  document.getElementById('hdr-nm').textContent=(cur.agentName||cur.username).split(' ')[0];
   const rb=document.getElementById('hdr-role');
   const effRole=(!['admin','owner'].includes(cur.role)&&cur.agentId&&Store.isManager(cur.agentId))?'manager':cur.role;
   const rl={owner:'Owner',admin:'Admin',manager:'Manager',agent:'Agent'};
@@ -109,11 +137,83 @@ function enterApp(){
   document.getElementById('elite-info-box').style.display=isOwner()?'':'none';
   document.getElementById('astro-section').style.display=isOwner()?'':'none';
   document.getElementById('add-inc-btn').style.display=isOwner()?'':'none';
+  // Hide dashboard from owner
+  const dashTab=Array.from(document.querySelectorAll('.tab')).find(t=>(t.getAttribute('onclick')||'').includes("'dashboard'"));
+  if(dashTab)dashTab.style.display=isOwner()?'none':'';
   document.getElementById('pd-date').value=new Date().toISOString().split('T')[0];
   Store.updateUndoBtns();GH.updateStatus(null);
+  // Check birthday warrior
+  _checkBirthdayWarrior();
   _updateWornBadge();
   switchTab('home');
   _autoSaveMonthlyReport();
+}
+
+
+
+function _seedDefaultIncentives(){
+  // AMAM Trip Winner — public, yearly
+  if(!Store.incentives.find(x=>x.id==='amam-trip-winner')){
+    Store.incentives.push({
+      id:'amam-trip-winner',
+      title:'AMAM Trip Winner',
+      emoji:'🦮',
+      badgeTitle:'AMAM Trip Winner',
+      scope:'personal',
+      metric:'ap',
+      timeframe:'annual',
+      goal:134000,
+      reward:'AMAM Annual Trip',
+      desc:'Submit $134,000 AP through American Amicable alone within the year to earn the AMAM Trip Winner badge.',
+      startDate:new Date().getFullYear()+'-01-01',
+      endDate:new Date().getFullYear()+'-12-31',
+      hidden:false,
+      createdAt:new Date().toISOString(),
+    });
+    Store.saveAll();
+  }
+  // Birthday Warrior — hidden, lifetime (auto-awarded)
+  if(!Store.incentives.find(x=>x.id==='birthday-warrior')){
+    Store.incentives.push({
+      id:'birthday-warrior',
+      title:'Birthday Warrior',
+      emoji:'🎂',
+      badgeTitle:'Birthday Warrior',
+      scope:'personal',
+      metric:'deals',
+      timeframe:'lifetime',
+      goal:1,
+      reward:'Birthday Warrior Badge',
+      desc:'Post a deal on your birthday. Auto-awarded.',
+      hidden:true,
+      createdAt:new Date().toISOString(),
+    });
+    Store.saveAll();
+  }
+}
+
+async function _checkBirthdayWarrior(){
+  if(!cur.agentId) return;
+  const m = Store.getMember(cur.agentId);
+  if(!m?.dob) return;
+  const today = new Date();
+  const dob = new Date(m.dob+'T12:00:00');
+  if(dob.getMonth()!==today.getMonth()||dob.getDate()!==today.getDate()) return;
+  // Check if they posted a deal today
+  const todayStr = today.toISOString().split('T')[0];
+  const todayDeals = Store.deals.filter(d=>d.agentId===cur.agentId&&d.date===todayStr);
+  if(!todayDeals.length) return; // no deal today = no badge
+  // Check if already has badge
+  const u = Store.users.find(x=>x.id===cur.id);
+  if(!u) return;
+  if((u.badges||[]).some(b=>b.birthdayWarrior===true)) return;
+  // Award it
+  if(!u.badges) u.badges=[];
+  u.badges.push({id:'bw-'+Store.uid(),emoji:'🎂',name:'Birthday Warrior',earnedAt:new Date().toISOString(),birthdayWarrior:true,manual:false});
+  cur.badges=u.badges;
+  await Store.saveAll();
+  toast('🎂 Happy Birthday! You earned the Birthday Warrior badge!');
+  _updateWornBadge();
 }
 
 async function doUndo(){if(await Store.undo()){refresh();toast('Undo');}}
@@ -204,7 +304,7 @@ function renderLeaderboard(){
   let html=`<thead><tr><th>Rank</th><th>Agent</th><th>AP</th><th>Monthly Prem.</th><th>Deals</th><th>Avg AP</th></tr></thead><tbody>`;
   if(!lb.length){html+=`<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--d)">No data.</td></tr>`;}
   else lb.forEach((r,i)=>{const rc=i===0?'r1':i===1?'r2':i===2?'r3':'rn';const pct=maxAP>0?Math.round((r.ap/maxAP)*100):0;const u=Store.users.find(x=>x.agentId===r.agentId);const avImg=u?.avatar?`<img src="${u.avatar}" alt="">`:initials(r.name);
-    html+=`<tr onclick="openProfile('${r.agentId}')"><td><div class="rank-badge ${rc}">${i+1}</div></td><td><div class="agent-cell"><div class="agent-av-sm">${avImg}</div><div><div class="agent-nm">${r.name}</div><div class="agent-ag">${Store.agN(r.agencyId)}</div></div></div></td><td><div class="ap-cell">${fmtFull(r.ap)}</div><div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div></td><td style="color:var(--d2)">${fmtFull(r.mp)}</td><td><span class="badge badge-g">${r.count}</span></td><td style="color:var(--d2)">${r.count?fmt$(r.ap/r.count):'—'}</td></tr>`;
+    html+=`<tr onclick="openProfile('${r.agentId}')"><td><div class="rank-badge ${rc}">${i+1}</div></td><td><div class="agent-cell"><div class="agent-av-sm">${avImg}</div><div><div class="agent-nm">${agentBadgeDisplay(r.agentId,null)} ${r.name}</div><div class="agent-ag">${Store.agN(r.agencyId)}</div></div></div></td><td><div class="ap-cell">${fmtFull(r.ap)}</div><div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div></td><td style="color:var(--d2)">${fmtFull(r.mp)}</td><td><span class="badge badge-g">${r.count}</span></td><td style="color:var(--d2)">${r.count?fmt$(r.ap/r.count):'—'}</td></tr>`;
   });
   document.getElementById('lb-tbl').innerHTML=html+'</tbody>';
 }
@@ -287,7 +387,7 @@ function renderTeams(){
       <div class="team-hdr" onclick="toggleTeam('${u.id}')">
         <div class="fl" style="gap:10px">
           <div class="agent-av-sm" style="width:40px;height:40px;font-size:13px;cursor:pointer" onclick="openProfile('${u.agentId}',event)">${avImg}</div>
-          <div><div style="font-size:14px;font-weight:700;color:var(--t);cursor:pointer" onclick="openProfile('${u.agentId}',event)">${u.agentName}</div>
+          <div><div style="font-size:14px;font-weight:700;color:var(--t);cursor:pointer" onclick="openProfile('${u.agentId}',event)">${agentBadgeDisplay(u.agentId,null)} ${u.agentName}</div>
           <div style="font-size:10px;color:var(--d2);margin-top:2px">${Store.agN(m?.agency)} · ${downUsers.length} downline · ${myD.length} personal deals</div></div>
         </div>
         <div style="text-align:right"><div style="font-size:18px;font-weight:700;color:var(--g)">${fmt$(teamAP)}</div>
@@ -347,7 +447,7 @@ function renderConsistency(){
     html+=`<div class="card">
       <div class="flsb" style="margin-bottom:10px">
         <div class="fl" style="gap:10px"><div class="agent-av-sm" style="cursor:pointer" onclick="openProfile('${u.agentId}')">${avImg}</div>
-          <div><div class="fw7" style="cursor:pointer" onclick="openProfile('${u.agentId}')">${u.agentName}</div><div class="text-xs text-d">${Store.agN(Store.getMember(u.agentId)?.agency)}</div></div></div>
+          <div><div class="fw7" style="cursor:pointer" onclick="openProfile('${u.agentId}')">${agentBadgeDisplay(u.agentId,null)} ${u.agentName}</div><div class="text-xs text-d">${Store.agN(Store.getMember(u.agentId)?.agency)}</div></div></div>
         <div><div style="font-size:10px;color:var(--d2);margin-bottom:4px">Streak: <strong style="color:var(--g)">${dayStreak}d</strong> · ${activeDays}/${totalDays} days (${pct}%)</div>
           <div>${earned.length?earned.map(m=>`<span class="streak-pill" style="color:var(--g)">&#128293; ${m}d</span>`).join(''):'<span class="streak-pill" style="color:var(--d)">No streak</span>'}</div></div>
       </div>
@@ -363,7 +463,8 @@ function renderConsistency(){
 function renderIncentives(){
   Store.loadLocal();
   const now=new Date().toISOString().split('T')[0];
-  const sorted=[...Store.incentives].sort((a,b)=>new Date(b.startDate||0)-new Date(a.startDate||0));
+  const allInc=Store.incentives.filter(x=>!x.hidden||(x.hidden&&isOwner()));
+  const sorted=[...allInc].sort((a,b)=>new Date(b.startDate||0)-new Date(a.startDate||0));
   if(!sorted.length){document.getElementById('incentives-body').innerHTML=`<div class="empty" style="grid-column:1/-1">No incentives yet.${isOwner()?' Click "+ Add Incentive"':''}</div>`;return;}
   const scopeClasses={agency:'inc-agency',personal:'inc-personal',team:'inc-team'};
   const scopeLabels={agency:'Agency Wide',personal:'Personal',team:'Team'};
@@ -484,7 +585,7 @@ function renderManageUsers(){
         const upline=Store.getMember(m.uplineId);
         html+=`<div class="user-row"><div class="user-row-left"><div class="agent-av-sm" style="background:var(--p3)">${initials(m.name)}</div>
           <div><div class="fw7" style="color:var(--d2)">${m.name}</div>
-          <div class="text-xs text-d">LP ${m.lifePath||'?'} · ${m.zodiac||'?'}${upline?' · Under '+upline.name:' · Top level'}</div></div></div>
+          <div class="text-xs text-d">${Store.agN(m.agency)}${upline?' · Under '+upline.name:' · Top level'}</div></div></div>
           <div class="user-row-right"><button class="btn btn-grn btn-xs" onclick="openRegisterUser('${m.id}')">Register Account</button></div>
         </div>`;
       });
@@ -531,6 +632,7 @@ function renderReports(){
   _renderMonthlyReportsList();
   const tf=TF.rpt;const cs=document.getElementById('rpt-cs')?.value||null;const ce=document.getElementById('rpt-ce')?.value||null;
   const filt=Store.filterByTF(Store.deals,tf,'date',cs,ce);const lb=Store.buildLB(tf,cs,ce);
+  const cRpt=document.getElementById('carrier-report');if(cRpt)cRpt.innerHTML=renderCarrierReport();
   document.getElementById('rpt-preview').innerHTML=`<div class="card"><div class="ct">Preview — ${tfLabel(tf)}</div>
     <div class="stat-grid" style="margin-bottom:12px">
       <div class="sc"><div class="sc-label">Total AP</div><div class="sc-val">${fmt$(Store.totalAP(filt))}</div></div>
@@ -538,8 +640,31 @@ function renderReports(){
       <div class="sc"><div class="sc-label">Active Agents</div><div class="sc-val wh">${lb.filter(r=>r.count>0).length}</div></div>
     </div>
     <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Rank</th><th>Agent</th><th>AP</th><th>MP</th><th>Deals</th><th>Refs</th></tr></thead><tbody>
-      ${lb.map((r,i)=>`<tr><td><div class="rank-badge ${i===0?'r1':i===1?'r2':i===2?'r3':'rn'}">${i+1}</div></td><td><div class="agent-nm">${r.name}</div><div class="agent-ag">${Store.agN(r.agencyId)}</div></td><td class="ap-cell">${fmt$(r.ap)}</td><td style="color:var(--d2)">${fmt$(r.mp)}</td><td>${r.count}</td><td style="color:var(--d2)">${r.refs||0}</td></tr>`).join('')}
+      ${lb.map((r,i)=>`<tr><td><div class="rank-badge ${i===0?'r1':i===1?'r2':i===2?'r3':'rn'}">${i+1}</div></td><td><div class="agent-nm">${agentBadgeDisplay(r.agentId,null)} ${r.name}</div><div class="agent-ag">${Store.agN(r.agencyId)}</div></td><td class="ap-cell">${fmt$(r.ap)}</td><td style="color:var(--d2)">${fmt$(r.mp)}</td><td>${r.count}</td><td style="color:var(--d2)">${r.refs||0}</td></tr>`).join('')}
     </tbody></table></div></div>`;
+}
+
+
+function renderCarrierReport(){
+  Store.loadLocal();
+  const tf=TF.rpt;const cs=document.getElementById('rpt-cs')?.value||null;const ce=document.getElementById('rpt-ce')?.value||null;
+  const filt=Store.filterByTF(Store.deals,tf,'date',cs,ce);
+  const carriers={};
+  filt.forEach(d=>{
+    const carrier=d.carrier||'Unknown';
+    if(!carriers[carrier])carriers[carrier]={deals:0,ap:0,agents:new Set()};
+    carriers[carrier].deals++;
+    carriers[carrier].ap+=d.ap||0;
+    if(d.agentId)carriers[carrier].agents.add(d.agentId);
+  });
+  const sorted=Object.entries(carriers).sort((a,b)=>b[1].ap-a[1].ap);
+  if(!sorted.length)return'<div class="empty">No carrier data for this period.</div>';
+  const maxAP=sorted[0]?.[1]?.ap||1;
+  let html=`<div class="card"><div class="ct">Carrier Breakdown — ${tfLabel(tf)}</div>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Carrier</th><th>AP</th><th>Deals</th><th>Agents</th><th>Avg AP</th></tr></thead><tbody>`;
+  sorted.forEach(([carrier,d])=>{const pct=Math.round((d.ap/maxAP)*100);html+=`<tr><td class="fw7" style="color:var(--t)">${carrier}</td><td><div class="ap-cell">${fmtFull(d.ap)}</div><div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div></td><td><span class="badge badge-g">${d.deals}</span></td><td style="color:var(--d2)">${d.agents.size}</td><td style="color:var(--d2)">${d.deals?fmt$(d.ap/d.deals):'—'}</td></tr>`;});
+  html+=`</tbody></table></div></div>`;
+  return html;
 }
 
 function renderAstroSection(){
@@ -615,12 +740,13 @@ function _renderProfile(u){
   const links=socialFields.filter(s=>u.links?.[s.key]).map(s=>{let href=u.links[s.key];if(s.key!=='discord'&&!/^https?:\/\//i.test(href))href='https://'+href;return`<a href="${s.key==='discord'?'#':href}" target="${s.key==='discord'?'_self':'_blank'}" rel="noopener" class="social-link">${s.label}</a>`;}).join('');
   const worn=(u.badges||[]).find(b=>b.id===u.wornBadgeId);
   document.getElementById('profile-modal-title').textContent=u.agentName||u.username;
+  document.getElementById('profile-modal-title').textContent=dispTitle;
   const tabs=[{id:'deals',label:'Deals'},{id:'badges',label:`Badges${(u.badges||[]).length?' ('+u.badges.length+')':''}`},...(isOwnProfile?[{id:'edit',label:'Edit Profile'}]:[])];
   let html=`<div class="profile-hero">
     <div class="profile-av-lg" ${isOwnProfile?'onclick="triggerAvatarUpload()"':''}>
       ${avImg}${isOwnProfile?`<div class="av-upload-overlay">Change</div><input type="file" id="avatar-file" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">`:''}</div>
     <div class="profile-hero-info">
-      <div class="profile-name-big">${u.agentName||u.username}${worn?` <span title="${worn.name}" style="font-size:20px">${worn.emoji||'🏅'}</span>`:''}</div>
+      <div class="profile-name-big">${u.agentName||u.username} ${worn?` <span title="${worn.name}" style="font-size:20px">${worn.emoji||'🏅'}</span>`:''}</div>
       <div class="profile-role-line">${Store.agN(m?.agency)} <span class="badge badge-g">${u.role}</span></div>
       <div class="profile-join-line">Joined: ${isOwner()?`<input type="date" value="${u.joinDate||''}" style="background:var(--p2);border:1px solid var(--b);border-radius:4px;padding:2px 8px;color:var(--g);font-size:11px;font-family:Georgia,serif;outline:none" onchange="saveJoinDate('${u.id}',this.value)">`:u.joinDate?fmtDate(u.joinDate):'Not set'}</div>
       ${u.bio?`<div style="font-size:11px;color:var(--d2);line-height:1.6;margin-top:6px">${u.bio}</div>`:''}
@@ -658,6 +784,7 @@ function handleAvatarUpload(e){const file=e.target.files[0];if(!file)return;cons
 async function saveProfileEdits(uid){
   const u=Store.users.find(x=>x.id===uid);if(!u)return;
   u.bio=document.getElementById('prof-bio')?.value||'';
+
   const socialKeys=['instagram','linkedin','facebook','tiktok','discord','website'];
   u.links={};socialKeys.forEach(k=>{const el=document.getElementById('prof-'+k);if(el)u.links[k]=el.value||'';});
   await Store.saveAll();toast('Profile saved');_renderProfile(u);
@@ -702,7 +829,7 @@ function dealRowHtml(d,showAgent,adminEdit){
       <div style="flex:1;min-width:0">
         <div class="fl" style="gap:7px;flex-wrap:wrap">
           <div class="fw7 text-g" style="font-size:13px">${fmtFull(d.ap)} AP</div>
-          ${showAgent&&u?`<span class="fl" style="gap:4px;cursor:pointer" onclick="openProfile('${d.agentId}',event)"><span class="agent-av-sm" style="width:18px;height:18px;font-size:8px">${avImg}</span><span style="font-size:10px;color:var(--d2)">${u.agentName}</span></span>`:''}
+          ${showAgent&&u?`<span class="fl" style="gap:4px;cursor:pointer" onclick="openProfile('${d.agentId}',event)"><span class="agent-av-sm" style="width:18px;height:18px;font-size:8px">${avImg}</span>${agentBadgeDisplay(d.agentId,d.date)}<span style="font-size:10px;color:var(--d2)">${u.agentName}</span></span>`:''}
           ${d.policyType?`<span class="badge badge-g">${d.policyType}</span>`:''}
           ${d.leadType?`<span class="badge badge-grey">${d.leadType}</span>`:''}
           ${d.referrals?`<span class="badge badge-blue">${d.referrals} refs</span>`:''}
@@ -727,6 +854,9 @@ function openPostDeal(){
   document.getElementById('pd-carrier').value='';document.getElementById('pd-ptype').value='';
   document.getElementById('pd-leadtype').value='';document.getElementById('pd-refs').value='0';
   document.getElementById('pd-notes').value='';
+  // Hide dashboard from owner
+  const dashTab=Array.from(document.querySelectorAll('.tab')).find(t=>(t.getAttribute('onclick')||'').includes("'dashboard'"));
+  if(dashTab)dashTab.style.display=isOwner()?'none':'';
   document.getElementById('pd-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('deal-err').style.display='none';openMod('modal-deal');
 }

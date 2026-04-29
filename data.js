@@ -53,6 +53,7 @@ const Store = (() => {
       if(u.commission===undefined)u.commission='';
       if(u.badges===undefined)u.badges=[];
       if(u.wornBadgeId===undefined)u.wornBadgeId=null;
+
       // remove founders
       if(u.id==='u_elite'||u.username==='founders')u.active=false;
     });
@@ -125,6 +126,7 @@ const Store = (() => {
     state.users.forEach(u=>{
       if(u.badges===undefined)u.badges=[];
       if(u.wornBadgeId===undefined)u.wornBadgeId=null;
+
     });
     state.deals.forEach(d=>{
       if(d.referrals===undefined)d.referrals=0;
@@ -201,6 +203,18 @@ const Store = (() => {
   }
 
   // Incentive progress calculator
+
+  function isBirthday(agentId){
+    const m=getMember(agentId);
+    if(!m?.dob)return false;
+    const now=new Date();
+    const dob=new Date(m.dob+'T12:00:00');
+    return dob.getMonth()===now.getMonth()&&dob.getDate()===now.getDate();
+  }
+  function hasBirthdayWarriorBadge(userId){
+    const u=state.users.find(x=>x.id===userId);
+    return(u?.badges||[]).some(b=>b.id==='birthday-warrior-'+userId||b.birthdayWarrior===true);
+  }
   function incProgress(inc,agentId){
     const tfD=filterByTF(state.deals,'custom','date',inc.startDate||null,inc.endDate||null);
     const scope=inc.scope||'agency';
@@ -236,7 +250,7 @@ const Store = (() => {
     set crmCounter(v){state.crmCounter=v;},
     loadLocal,saveLocal,saveAll,saveCRM,syncFromGH,pushToGH,DEF_USERS,SEED_MEMBERS,
     undo,redo,pushUndo,updateUndoBtns,
-    uid,getAgentUsers,getMember,getDownlineIds,isManager,
+    uid,getAgentUsers,getMember,getDownlineIds,isManager,isBirthday,hasBirthdayWarriorBadge,
     totalAP,totalMP,totalReferrals,agN,getMondayOf,filterByTF,buildLB,incProgress,
   };
 })();

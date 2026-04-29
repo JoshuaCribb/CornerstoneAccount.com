@@ -263,16 +263,20 @@ html,body{height:100%;background:#000000;color:var(--t);font-family:'Georgia',se
 
 /* ── MOBILE ─────────────────────────────────── */
 @media(max-width:768px){
-  .app-hdr{height:auto;min-height:44px;padding:6px 10px;position:relative}
-  .hdr-logo{height:24px;top:50%;transform:translate(-50%,-50%);position:absolute}
-  .hdr-left .btn{font-size:9px;padding:3px 7px}
-  .hdr-right .btn{font-size:9px;padding:3px 7px}
+  .app-hdr{height:44px;padding:0 8px;position:relative;overflow:visible}
+  .hdr-logo{height:22px;top:50%;transform:translate(-50%,-50%);position:absolute;z-index:1}
+  .hdr-left{z-index:2;gap:4px}
+  .hdr-right{z-index:2;gap:4px}
+  .hdr-left .btn,.hdr-right .btn{font-size:9px;padding:2px 6px;border-radius:5px}
   .user-nm{display:none}
+  .role-badge{display:none}
+  .worn-badge-icon{display:none}
   .subnav{padding:5px 10px;top:44px}
   .tab{font-size:10px;padding:4px 8px}
   .fr2,.fr3{grid-template-columns:1fr}
   .incentives-grid{grid-template-columns:1fr}
   .heatmap-grid{grid-template-columns:repeat(26,1fr)}
-  .modal{padding:16px}
+  .modal{padding:16px;max-width:100%}
+  .modal-profile{max-width:100%}
   .profile-hero{flex-direction:column;align-items:flex-start}
 }

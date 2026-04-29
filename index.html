@@ -222,6 +222,7 @@
           <button class="btn btn-ghost btn-sm" onclick="dlReport('teams')">&#8681; Teams</button>
           <button class="btn btn-ghost btn-sm" onclick="dlReport('roi')">&#8681; ROI</button>
         </div>
+        <div id="carrier-report"></div>
         <div id="rpt-preview"></div>
       </div>
 
@@ -269,7 +270,26 @@
         <select id="pd-leadtype"><option value="">Select...</option><option>Paid Lead</option><option>Warm Market</option></select>
       </div>
     </div>
-    <div class="fg"><label>Carrier</label><input type="text" id="pd-carrier" placeholder="Insurance carrier"></div>
+    <div class="fg"><label>Carrier</label>
+      <select id="pd-carrier">
+        <option value="">Select carrier...</option>
+        <option>American Amicable</option>
+        <option>United Home Life</option>
+        <option>Royal Neighbors</option>
+        <option>American Home Life</option>
+        <option>Baltimore</option>
+        <option>Kansas City Life</option>
+        <option>Transamerica</option>
+        <option>Mutual of Omaha</option>
+        <option>Polish Falcons</option>
+        <option>Aetna</option>
+        <option>Ethos</option>
+        <option>Corebridge</option>
+        <option>NLG</option>
+        <option>Lafayette</option>
+        <option>Mutual Trust</option>
+      </select>
+    </div>
     <div class="fg"><label>Referrals from this close (beneficiary referrals)</label><input type="number" id="pd-refs" min="0" value="0" placeholder="0"></div>
     <div class="fg"><label>Notes (private until clicked)</label><textarea id="pd-notes"></textarea></div>
     <input type="hidden" id="pd-id">
