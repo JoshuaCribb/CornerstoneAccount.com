@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     else if((e.metaKey||e.ctrlKey)&&((e.key==='z'&&e.shiftKey)||e.key==='y')){e.preventDefault();doRedo();}
   });
   const session=_loadSession();
-  if(session){Store.loadLocal();const u=Store.users.find(x=>x.id===session.userId&&x.active!==false);if(u){cur=u;enterApp();_startActivity();Store.syncFromGH().then(ok=>{if(ok)refresh();});}}
+  if(session){Store.loadLocal();const u=Store.users.find(x=>x.id===session.userId&&x.active!==false);if(u){cur=u;enterApp();_startActivity();Store.syncFromGH().then(ok=>{if(ok){refresh();GH.startLiveSync();}});}}
 });
 
 // ── AUTH ───────────────────────────────────────────────────────
@@ -145,6 +145,7 @@ function enterApp(){
   // Check birthday warrior
   _checkBirthdayWarrior();
   _updateWornBadge();
+  GH.startLiveSync();
   switchTab('home');
   _autoSaveMonthlyReport();
 }
@@ -914,12 +915,11 @@ const GOAL_METRIC_LABELS={ap:'AP',deals:'Deals',referrals:'Referrals',warmmarket
 const GOAL_PERIOD_LABELS={none:'Ongoing',daily:'Daily',weekly:'Weekly',monthly:'Monthly',yearly:'Yearly'};
 
 function renderPersonalGoals(){
-  if(!cur.agentId&&!isOwner())return;
   const card=document.getElementById('personal-goals-card');
   const list=document.getElementById('personal-goals-list');
   if(!card||!list)return;
-  // Only agent and owner can see
-  if(!cur.agentId&&!isOwner()){card.style.display='none';return;}
+  // Only show if agent has an agentId (owner without agentId skips)
+  if(!cur.agentId){card.style.display='none';return;}
   card.style.display='';
   const myGoals=Store.personalGoals.filter(g=>g.agentId===cur.agentId);
   if(!myGoals.length){list.innerHTML='<div class="empty" style="padding:16px">No personal goals set. Add one to track your own standards.</div>';return;}
@@ -975,11 +975,29 @@ async function saveGoal(){
   const id=document.getElementById('goal-id').value;
   const name=document.getElementById('goal-name').value.trim();
   if(!name){toast('Goal name required');return;}
-  if(!cur.agentId){toast('Not linked to agent account');return;}
-  const obj={id:id||Store.uid(),agentId:cur.agentId,name,metric:document.getElementById('goal-metric').value,target:parseFloat(document.getElementById('goal-target').value)||0,period:document.getElementById('goal-period').value,createdAt:new Date().toISOString()};
-  if(id){const idx=Store.personalGoals.findIndex(x=>x.id===id);if(idx>-1)Store.personalGoals.splice(idx,1,obj);}
-  else Store.personalGoals.push(obj);
-  await Store.saveAll();closeMod('modal-goal');renderPersonalGoals();toast('Goal saved');
+  if(!cur.agentId){toast('You need an agent account to set personal goals');return;}
+  const target=parseFloat(document.getElementById('goal-target').value)||0;
+  if(!target){toast('Please enter a target number');return;}
+  const obj={
+    id:id||Store.uid(),
+    agentId:cur.agentId,
+    name,
+    metric:document.getElementById('goal-metric').value||'ap',
+    target,
+    period:document.getElementById('goal-period').value||'none',
+    createdAt:new Date().toISOString()
+  };
+  if(id){
+    const idx=Store.personalGoals.findIndex(x=>x.id===id);
+    if(idx>-1)Store.personalGoals.splice(idx,1,obj);
+    else Store.personalGoals.push(obj);
+  } else {
+    Store.personalGoals.push(obj);
+  }
+  await Store.saveAll();
+  closeMod('modal-goal');
+  renderPersonalGoals();
+  toast('Goal saved — '+name);
 }
 async function deleteGoal(id){
   const ok=await showConfirm('Remove Goal','Remove this personal goal?','Remove');if(!ok)return;
