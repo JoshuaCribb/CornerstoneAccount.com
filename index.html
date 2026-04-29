@@ -29,8 +29,8 @@
 <div id="app">
   <header class="app-hdr">
     <div class="hdr-left">
-      <button class="btn btn-ghost btn-sm admin-tab" id="undo-btn" onclick="doUndo()" style="display:none" disabled title="Undo (Ctrl+Z)">&#8630;</button>
-      <button class="btn btn-ghost btn-sm admin-tab" id="redo-btn" onclick="doRedo()" style="display:none" disabled title="Redo">&#8631;</button>
+      <button class="btn btn-ghost btn-sm admin-tab" id="undo-btn" onclick="doUndo()" style="display:none" disabled>&#8630;</button>
+      <button class="btn btn-ghost btn-sm admin-tab" id="redo-btn" onclick="doRedo()" style="display:none" disabled>&#8631;</button>
       <button class="btn btn-ghost btn-sm owner-tab" id="recruit-btn" style="display:none" onclick="openRecruitCRM()">&#9670; Recruiting</button>
     </div>
     <img src="assets/logo.png" alt="Cornerstone Council" class="hdr-logo">
@@ -64,7 +64,7 @@
         <div class="welcome-bar" id="home-welcome" style="font-size:13px;color:var(--d2);margin-bottom:16px;padding:10px 16px;background:var(--g4);border:1px solid var(--b);border-radius:8px;font-style:italic"></div>
         <div class="flsb" style="margin-bottom:12px">
           <div><div style="font-size:20px;font-weight:700;color:var(--g)">Cornerstone Council</div><div style="font-size:11px;color:var(--d)">Collective Agency Production</div></div>
-          <div class="tf-bar" id="home-tf">
+          <div class="tf-bar">
             <button class="tf-btn" onclick="setTF('home','1d',this)">1D</button>
             <button class="tf-btn" onclick="setTF('home','7d',this)">7D</button>
             <button class="tf-btn" onclick="setTF('home','30d',this)">30D</button>
@@ -86,8 +86,8 @@
       <!-- DASHBOARD -->
       <div class="view" id="view-dashboard">
         <div class="flsb" style="margin-bottom:14px">
-          <div><div style="font-size:20px;font-weight:700;color:var(--g)">My Dashboard</div><div style="font-size:11px;color:var(--d)">Personal production &amp; earnings</div></div>
-          <div class="tf-bar" id="dash-tf">
+          <div><div style="font-size:20px;font-weight:700;color:var(--g)">My Dashboard</div></div>
+          <div class="tf-bar">
             <button class="tf-btn" onclick="setTF('dash','today',this)">Today</button>
             <button class="tf-btn" onclick="setTF('dash','week',this)">Week</button>
             <button class="tf-btn active" onclick="setTF('dash','month',this)">Month</button>
@@ -99,10 +99,18 @@
         <div class="card"><div class="ct">My Deals</div><div id="my-deals-list"></div></div>
         <div class="card">
           <div class="flsb" style="margin-bottom:10px">
-            <div class="ct" style="margin:0">Lead Spend History</div>
+            <div class="ct" style="margin:0">Lead Spend</div>
             <button class="btn btn-ghost btn-sm" onclick="openLeadSpend()">+ Add Lead Spend</button>
           </div>
           <div id="my-spend-list"></div>
+        </div>
+        <!-- Recruit Posts (private) -->
+        <div class="card" id="recruit-posts-card" style="display:none">
+          <div class="flsb" style="margin-bottom:10px">
+            <div class="ct" style="margin:0">My Recruit Posts <span class="badge badge-grey" style="font-size:8px">Private</span></div>
+            <button class="btn btn-ghost btn-sm" onclick="openAddRecruitPost()">+ Post Recruit</button>
+          </div>
+          <div id="recruit-posts-list"></div>
         </div>
       </div>
 
@@ -148,7 +156,7 @@
       <!-- CONSISTENCY -->
       <div class="view" id="view-consistency">
         <div class="flsb" style="margin-bottom:14px">
-          <div><div style="font-size:20px;font-weight:700;color:var(--g)">Consistency</div><div style="font-size:11px;color:var(--d)">Daily streaks &amp; activity</div></div>
+          <div><div style="font-size:20px;font-weight:700;color:var(--g)">Consistency</div></div>
           <div class="tf-bar">
             <button class="tf-btn" onclick="setTF('cons','month',this)">Month</button>
             <button class="tf-btn active" onclick="setTF('cons','ytd',this)">YTD</button>
@@ -162,7 +170,7 @@
       <div class="view" id="view-incentives">
         <div class="flsb" style="margin-bottom:14px">
           <div><div style="font-size:20px;font-weight:700;color:var(--g)">Incentives</div></div>
-          <button class="btn btn-pri btn-sm" id="add-inc-btn" style="display:none" onclick="openAddInc()">+ Add Incentive</button>
+          <button class="btn btn-pri btn-sm owner-tab" id="add-inc-btn" style="display:none" onclick="openAddInc()">+ Add Incentive</button>
         </div>
         <div class="incentives-grid" id="incentives-body"></div>
       </div>
@@ -174,15 +182,17 @@
           <button class="btn btn-pri btn-sm" onclick="openAddUser()">+ Add Agent</button>
         </div>
         <div class="info-box" id="elite-info-box" style="display:none">
-          <strong>&#9670; Owner Access.</strong> Full control — recruit CRM, all roles, all commission data, astrology performance.
+          <strong>&#9670; Owner Access.</strong>
           <div class="gh-status-row"><div class="gh-dot on" id="gh-dot"></div><span id="gh-status-txt">Firebase — Firestore</span><button class="btn btn-ghost btn-xs" onclick="openGHModal()" style="margin-left:8px">Database Info</button></div>
         </div>
-        <div style="display:flex;gap:4px;margin-bottom:12px">
+        <div style="display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap">
           <button class="tf-btn active" id="mt-users" onclick="switchManageTab('users',this)">Agents &amp; Hierarchy</button>
           <button class="tf-btn" id="mt-deals" onclick="switchManageTab('deals',this)">All Deals</button>
+          <button class="tf-btn" id="mt-badges" onclick="switchManageTab('badges',this)">Badge Activity</button>
         </div>
         <div id="manage-users-div"></div>
         <div id="manage-deals-div" style="display:none"></div>
+        <div id="manage-badges-div" style="display:none"></div>
       </div>
 
       <!-- REPORTS -->
@@ -219,18 +229,7 @@
   </div>
 </div>
 
-<!-- ═══ PROFILE MODAL (centered) ═══ -->
-<div id="profile-modal-ov" onclick="if(event.target===this)closeProfile()">
-  <div class="profile-modal">
-    <div class="profile-modal-hdr">
-      <div style="font-size:13px;font-weight:700;color:var(--g)" id="profile-modal-title">Profile</div>
-      <button class="btn btn-ghost btn-sm" onclick="closeProfile()">&#10005; Close</button>
-    </div>
-    <div class="profile-modal-body" id="profile-modal-body"></div>
-  </div>
-</div>
-
-<!-- ═══ INTERNAL CONFIRM DIALOG ═══ -->
+<!-- ═══ INTERNAL CONFIRM ═══ -->
 <div class="confirm-ov" id="confirm-ov">
   <div class="confirm-box">
     <h3 id="confirm-title">Confirm</h3>
@@ -239,6 +238,17 @@
       <button class="btn btn-ghost" onclick="closeConfirm(false)">Cancel</button>
       <button class="btn btn-dan" id="confirm-ok-btn" onclick="closeConfirm(true)">Confirm</button>
     </div>
+  </div>
+</div>
+
+<!-- ═══ PROFILE MODAL ═══ -->
+<div class="modal-ov" id="modal-profile" onclick="if(event.target===this)closeMod('modal-profile')">
+  <div class="modal modal-profile">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-size:15px;font-weight:700;color:var(--g)" id="profile-modal-title">Profile</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeMod('modal-profile')">&#10005; Close</button>
+    </div>
+    <div id="profile-modal-body"></div>
   </div>
 </div>
 
@@ -253,10 +263,14 @@
     <div class="fg"><label>AP — Annualized Premium</label><input type="text" id="pd-ap-show" readonly style="color:var(--g);font-weight:700;font-size:15px;background:var(--g4);border-color:var(--b2)"></div>
     <div class="fr2">
       <div class="fg"><label>Policy Type</label>
-        <select id="pd-ptype"><option value="">Select...</option><option>Whole Life</option><option>IUL</option><option>Term Life</option><option>Annuity</option></select>
+        <select id="pd-ptype"><option value="">Select...</option><option>Whole Life</option><option>IUL</option><option>Term Life</option><option>Annuity</option><option>FEX</option></select>
       </div>
-      <div class="fg"><label>Carrier</label><input type="text" id="pd-carrier" placeholder="Insurance carrier"></div>
+      <div class="fg"><label>Lead Type</label>
+        <select id="pd-leadtype"><option value="">Select...</option><option>Paid Lead</option><option>Warm Market</option></select>
+      </div>
     </div>
+    <div class="fg"><label>Carrier</label><input type="text" id="pd-carrier" placeholder="Insurance carrier"></div>
+    <div class="fg"><label>Referrals from this close (beneficiary referrals)</label><input type="number" id="pd-refs" min="0" value="0" placeholder="0"></div>
     <div class="fg"><label>Notes (private until clicked)</label><textarea id="pd-notes"></textarea></div>
     <input type="hidden" id="pd-id">
     <div id="deal-err" class="warn-box mt8" style="display:none"></div>
@@ -271,7 +285,6 @@
 <div class="modal-ov" id="modal-spend">
   <div class="modal">
     <div class="modal-title">Post Lead Spend</div>
-    <div class="info-box">Lead spend subtracts from your earnings in Dashboard. Only you and admins see this.</div>
     <div class="fr2">
       <div class="fg"><label>Week of (Monday)</label><input type="date" id="sp-week"></div>
       <div class="fg"><label>Amount ($)</label><input type="number" id="sp-amount" min="0" step="0.01" placeholder="0.00"></div>
@@ -310,27 +323,45 @@
   <div class="modal modal-lg">
     <div class="modal-title" id="inc-modal-ttl">Add Incentive</div>
     <div class="fr2">
-      <div class="fg"><label>Badge Emoji</label><input type="text" id="inc-emoji" placeholder="e.g. 🏆 🔥 💰 ⭐" style="font-size:20px;text-align:center"></div>
+      <div class="fg"><label>Badge Emoji</label><input type="text" id="inc-emoji" placeholder="🏆" style="font-size:22px;text-align:center"></div>
       <div class="fg"><label>Badge Title</label><input type="text" id="inc-badge-title" placeholder="e.g. Top Producer"></div>
     </div>
     <div class="fg"><label>Incentive Type</label>
       <select id="inc-scope">
-        <option value="agency">Agency Wide — all agents compete</option>
-        <option value="personal">Personal Agent — each vs their own goal</option>
-        <option value="team">Team Production — team lead + downlines</option>
+        <option value="agency">Agency Wide</option>
+        <option value="personal">Personal Agent</option>
+        <option value="team">Team Production</option>
+      </select>
+    </div>
+    <div class="fg"><label>Metric to Track</label>
+      <select id="inc-metric">
+        <option value="ap">AP (Annualized Premium)</option>
+        <option value="deals">Deals Submitted</option>
+        <option value="referrals">Total Referrals (beneficiary)</option>
+        <option value="warmmarket">Warm Market Closes</option>
+        <option value="days">Days Posted a Deal</option>
+        <option value="recruits">Recruits Added</option>
       </select>
     </div>
     <div class="fr2">
       <div class="fg"><label>Title</label><input type="text" id="inc-title" placeholder="e.g. April Top Producer"></div>
       <div class="fg"><label>Timeframe</label>
-        <select id="inc-tf"><option value="weekly">Weekly</option><option value="monthly" selected>Monthly</option><option value="quarterly">Quarterly</option><option value="semiannual">Semi-Annual</option><option value="annual">Annual</option></select>
+        <select id="inc-tf">
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly" selected>Monthly</option>
+          <option value="quarterly">Quarterly</option>
+          <option value="semiannual">Semi-Annual</option>
+          <option value="annual">Annual</option>
+          <option value="lifetime">Lifetime</option>
+        </select>
       </div>
     </div>
     <div class="fr2">
       <div class="fg"><label>Start Date</label><input type="date" id="inc-start"></div>
       <div class="fg"><label>End Date</label><input type="date" id="inc-end"></div>
     </div>
-    <div class="fg"><label>AP Goal ($)</label><input type="number" id="inc-goal" min="0" placeholder="e.g. 50000"></div>
+    <div class="fg"><label>Goal (0 is valid — means any activity counts)</label><input type="number" id="inc-goal" min="0" placeholder="e.g. 50000 or 0"></div>
     <div class="fg"><label>Reward / Prize</label><input type="text" id="inc-reward" placeholder="e.g. $500 bonus, trip..."></div>
     <div class="fg"><label>Description</label><textarea id="inc-desc" placeholder="Details..."></textarea></div>
     <input type="hidden" id="inc-id">
@@ -344,8 +375,8 @@
 <!-- GIVE BADGE (owner manual) -->
 <div class="modal-ov" id="modal-give-badge">
   <div class="modal">
-    <div class="modal-title">Give Badge Manually</div>
-    <div class="fg"><label>Badge Emoji</label><input type="text" id="gb-emoji" placeholder="🏆" style="font-size:20px;text-align:center;max-width:80px"></div>
+    <div class="modal-title">Give Badge</div>
+    <div class="fg"><label>Badge Emoji</label><input type="text" id="gb-emoji" placeholder="🏆" style="font-size:22px;text-align:center;max-width:80px"></div>
     <div class="fg"><label>Badge Name</label><input type="text" id="gb-name" placeholder="e.g. Founding Member"></div>
     <div class="fg"><label>Note (optional)</label><input type="text" id="gb-note" placeholder="Why they earned this..."></div>
     <input type="hidden" id="gb-agent-id">
@@ -356,18 +387,17 @@
   </div>
 </div>
 
-<!-- FIREBASE STATUS -->
-<div class="modal-ov" id="modal-gh">
+<!-- RECRUIT POST -->
+<div class="modal-ov" id="modal-recruit-post">
   <div class="modal">
-    <div class="modal-title">&#9670; Firebase Database</div>
-    <div class="info-box">
-      <strong>Firestore is your live database.</strong> Every deal, account, badge, and incentive saves instantly from every device — no token required.<br><br>
-      Project: <strong style="color:var(--g)">cornerstonearchive</strong><br>
-      Database: <strong style="color:var(--g)">Firestore (default)</strong><br>
-      Mode: <strong style="color:var(--g)">Real-time, all devices</strong>
+    <div class="modal-title">Post a Recruit</div>
+    <div class="info-box">This is only visible to you, your manager, and the owner.</div>
+    <div class="fg"><label>Recruit Name</label><input type="text" id="rp-name" placeholder="Who did you recruit?"></div>
+    <div class="fg"><label>Notes</label><textarea id="rp-notes" placeholder="Details about this recruit..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeMod('modal-recruit-post')">Cancel</button>
+      <button class="btn btn-pri" onclick="submitRecruitPost()">Post</button>
     </div>
-    <div class="gh-status-row"><div class="gh-dot on" id="gh-dot"></div><span id="gh-status-txt">Firebase — Firestore</span></div>
-    <div class="modal-footer"><button class="btn btn-pri" onclick="closeMod('modal-gh')">Got it</button></div>
   </div>
 </div>
 
@@ -377,6 +407,16 @@
     <div class="modal-title" id="ar-title">Agent Report</div>
     <div id="ar-body"></div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeMod('modal-agent-rpt')">Close</button></div>
+  </div>
+</div>
+
+<!-- FIREBASE INFO -->
+<div class="modal-ov" id="modal-gh">
+  <div class="modal">
+    <div class="modal-title">&#9670; Firebase Database</div>
+    <div class="info-box"><strong>Firestore is your live database.</strong> Every deal, account, badge, and incentive saves instantly from every device.<br><br>Project: <strong style="color:var(--g)">cornerstonearchive</strong></div>
+    <div class="gh-status-row"><div class="gh-dot on" id="gh-dot"></div><span id="gh-status-txt">Firebase — Firestore</span></div>
+    <div class="modal-footer"><button class="btn btn-pri" onclick="closeMod('modal-gh')">Got it</button></div>
   </div>
 </div>
 

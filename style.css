@@ -1,12 +1,12 @@
 /* ═══════════════════════════════════════════════
    CORNERSTONE COUNCIL — AGENT PORTAL
-   True Black & Gold Theme
+   True Black & Gold Theme v5
 ═══════════════════════════════════════════════ */
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#000000;--p1:#080808;--p2:#0f0f0f;--p3:#161616;--p4:#1c1c1c;
   --g:#c9a84c;--g2:#f0d080;--g3:#8a6e30;--g4:rgba(201,168,76,0.10);
-  --b:rgba(201,168,76,0.18);--b2:rgba(201,168,76,0.38);--b3:rgba(201,168,76,0.6);
+  --b:rgba(201,168,76,0.18);--b2:rgba(201,168,76,0.38);
   --t:#e8dfc8;--d:#6a6050;--d2:#9a8f7a;
   --red:#c0392b;--rdim:rgba(192,57,43,0.10);
   --grn:#27ae60;--gdim:rgba(39,174,96,0.10);
@@ -64,13 +64,12 @@ html,body{height:100%;background:#000000;color:var(--t);font-family:'Georgia',se
 .rb-admin{background:var(--g4);color:var(--g)}
 .rb-owner{background:rgba(201,168,76,.25);color:var(--g2)}
 .rb-manager{background:var(--bdim);color:#60a5fa}
-/* Badge icon next to name in header */
-.worn-badge-icon{font-size:14px;cursor:pointer;position:relative;display:inline-flex;align-items:center}
-.worn-badge-icon .badge-tooltip{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--p1);border:1px solid var(--b2);border-radius:6px;padding:4px 9px;font-size:10px;color:var(--t);white-space:nowrap;z-index:999;pointer-events:none}
+.worn-badge-icon{font-size:15px;cursor:pointer;position:relative;display:inline-flex;align-items:center}
+.worn-badge-icon .badge-tooltip{display:none;position:absolute;bottom:calc(100%+6px);left:50%;transform:translateX(-50%);background:var(--p1);border:1px solid var(--b2);border-radius:6px;padding:4px 9px;font-size:10px;color:var(--t);white-space:nowrap;z-index:999;pointer-events:none}
 .worn-badge-icon:hover .badge-tooltip{display:block}
 
-/* ── MAIN CONTENT ─────────────────────────── */
-.content-area{flex:1;overflow:hidden;display:flex;position:relative}
+/* ── CONTENT ─────────────────────────────── */
+.content-area{flex:1;overflow:hidden;display:flex}
 .view-wrap{flex:1;overflow-y:auto;padding:20px;height:100%}
 .view{display:none;height:100%}.view.active{display:block}
 
@@ -89,7 +88,7 @@ html,body{height:100%;background:#000000;color:var(--t);font-family:'Georgia',se
 /* ── CHART ─────────────────────────────────── */
 .chart-wrap{position:relative;height:240px}
 .chart-wrap.tall{height:300px}
-.chart-wrap.pie{height:320px;max-width:420px;margin:0 auto}
+.chart-wrap.pie{height:320px;max-width:480px;margin:0 auto}
 
 /* ── TF BAR ─────────────────────────────────── */
 .tf-bar{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
@@ -99,7 +98,6 @@ html,body{height:100%;background:#000000;color:var(--t);font-family:'Georgia',se
 .tf-custom{display:none;align-items:center;gap:5px;flex-wrap:wrap;margin-top:5px}
 .tf-custom.show{display:flex}
 .tf-custom input{background:var(--p2);border:1px solid var(--b);border-radius:5px;padding:4px 9px;color:var(--t);font-size:11px;font-family:'Georgia',serif;outline:none;max-width:140px}
-.tf-custom input:focus{border-color:var(--g)}
 
 /* ── TABLE ─────────────────────────────────── */
 .tbl-wrap{overflow-x:auto}
@@ -142,16 +140,17 @@ html,body{height:100%;background:#000000;color:var(--t);font-family:'Georgia',se
 .post-hero{text-align:center;margin:16px 0 20px;padding:18px;background:var(--g4);border:1px solid var(--b2);border-radius:12px}
 .post-hero-title{font-size:11px;color:var(--g3);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
 
-/* ── MODAL (centered) ──────────────────────── */
-.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+/* ── PROFILE MODAL (large centered) ────────── */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;align-items:center;justify-content:center;padding:16px;overflow-y:auto}
 .modal-ov.open{display:flex}
-.modal{background:var(--p1);border:1px solid var(--b2);border-radius:14px;padding:24px;width:100%;max-width:500px;margin:auto;position:relative}
-.modal-lg{max-width:640px}
-.modal-xl{max-width:780px}
+.modal{background:var(--p1);border:1px solid var(--b2);border-radius:14px;padding:24px;width:100%;max-width:500px;margin:auto}
+.modal-lg{max-width:680px}
+.modal-xl{max-width:860px}
+.modal-profile{max-width:780px}
 .modal-title{font-size:15px;color:var(--g);letter-spacing:.5px;margin-bottom:18px;font-weight:700}
 .modal-footer{display:flex;gap:8px;margin-top:18px;justify-content:flex-end;flex-wrap:wrap}
 
-/* ── INTERNAL CONFIRM DIALOG ───────────────── */
+/* ── INTERNAL CONFIRM ─────────────────────── */
 .confirm-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:500;align-items:center;justify-content:center;padding:20px}
 .confirm-ov.open{display:flex}
 .confirm-box{background:var(--p1);border:1px solid var(--b2);border-radius:14px;padding:28px;max-width:400px;width:100%;text-align:center}
@@ -159,37 +158,34 @@ html,body{height:100%;background:#000000;color:var(--t);font-family:'Georgia',se
 .confirm-box p{font-size:13px;color:var(--d2);line-height:1.7;margin-bottom:20px}
 .confirm-actions{display:flex;gap:10px;justify-content:center}
 
-/* ── PROFILE MODAL (centered) ─────────────── */
-#profile-modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
-#profile-modal-ov.open{display:flex}
-.profile-modal{background:var(--p1);border:1px solid var(--b2);border-radius:14px;width:100%;max-width:640px;margin:auto;display:flex;flex-direction:column;max-height:90vh}
-.profile-modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--b);flex-shrink:0}
-.profile-modal-body{overflow-y:auto;padding:20px;flex:1}
+/* ── PROFILE CONTENT ──────────────────────── */
 .profile-hero{display:flex;align-items:center;gap:18px;margin-bottom:18px;padding:14px;background:var(--p2);border:1px solid var(--b);border-radius:10px}
-.profile-av-lg{width:76px;height:76px;border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:#000;flex-shrink:0;overflow:hidden;border:2px solid var(--b2);position:relative;cursor:pointer}
+.profile-av-lg{width:86px;height:86px;border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#000;flex-shrink:0;overflow:hidden;border:2px solid var(--b2);position:relative;cursor:pointer}
 .profile-av-lg img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .av-upload-overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);border-radius:50%;display:none;align-items:center;justify-content:center;font-size:10px;color:#fff;text-align:center;padding:4px}
 .profile-av-lg:hover .av-upload-overlay{display:flex}
 .profile-hero-info{flex:1;min-width:0}
-.profile-name-big{font-size:18px;font-weight:700;color:var(--t);margin-bottom:3px}
+.profile-name-big{font-size:19px;font-weight:700;color:var(--t);margin-bottom:3px}
 .profile-role-line{font-size:11px;color:var(--d2);margin-bottom:4px}
 .profile-join-line{font-size:11px;color:var(--g3);margin-bottom:8px}
 .profile-social-links{display:flex;gap:7px;flex-wrap:wrap;margin-top:6px}
 .social-link{font-size:10px;color:var(--g);background:var(--g4);border:1px solid var(--b);border-radius:5px;padding:3px 9px;text-decoration:none;transition:background .15s}
 .social-link:hover{background:rgba(201,168,76,.2)}
-.profile-tabs{display:flex;gap:3px;margin-bottom:14px;border-bottom:1px solid var(--b);padding-bottom:8px}
-.profile-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.profile-tabs{display:flex;gap:3px;margin-bottom:14px;border-bottom:1px solid var(--b);padding-bottom:8px;flex-wrap:wrap}
+.profile-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:14px}
 
 /* ── BADGES ─────────────────────────────────── */
-.badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:10px}
+.badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
 .earned-badge{background:var(--p2);border:1px solid var(--b2);border-radius:10px;padding:12px;text-align:center;position:relative}
-.earned-badge .badge-emoji{font-size:28px;margin-bottom:6px}
-.earned-badge .badge-name{font-size:11px;font-weight:700;color:var(--g);margin-bottom:3px}
-.earned-badge .badge-from{font-size:9px;color:var(--d)}
-.earned-badge .badge-worn-dot{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--g)}
+.earned-badge .b-emoji{font-size:30px;margin-bottom:6px;display:block}
+.earned-badge .b-name{font-size:11px;font-weight:700;color:var(--g);margin-bottom:3px}
+.earned-badge .b-date{font-size:9px;color:var(--d)}
 .badge-wear-btn{font-size:9px;padding:3px 8px;border-radius:5px;background:var(--g4);color:var(--g3);border:1px solid var(--b);cursor:pointer;font-family:'Georgia',serif;margin-top:6px;display:block;width:100%;text-align:center;transition:all .15s}
 .badge-wear-btn.wearing{background:var(--g);color:#000}
-.badge-wear-btn:hover{background:rgba(201,168,76,.2)}
+
+/* ── BADGE ACTIVITY FEED ────────────────────── */
+.badge-feed-item{background:var(--p2);border:1px solid var(--b);border-radius:8px;padding:10px 13px;margin-bottom:7px;display:flex;align-items:center;gap:12px}
+.badge-feed-emoji{font-size:22px;flex-shrink:0}
 
 /* ── TEAMS ─────────────────────────────────── */
 .team-card{background:var(--p1);border:1px solid var(--b);border-radius:10px;padding:14px 16px;margin-bottom:10px;transition:border-color .2s}
@@ -206,14 +202,14 @@ html,body{height:100%;background:#000000;color:var(--t);font-family:'Georgia',se
 .streak-pill{background:var(--g4);border:1px solid var(--b);border-radius:20px;padding:4px 12px;display:inline-flex;align-items:center;gap:5px;font-size:11px;margin-right:6px;margin-bottom:6px}
 
 /* ── INCENTIVES GRID ─────────────────────────── */
-.incentives-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px}
+.incentives-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 @media(max-width:900px){.incentives-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.incentives-grid{grid-template-columns:1fr}}
-.inc-card{background:var(--p1);border:1px solid var(--b);border-radius:12px;padding:16px;transition:border-color .2s;display:flex;flex-direction:column;gap:6px}
+.inc-card{background:var(--p1);border:1px solid var(--b);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:6px;transition:border-color .2s}
 .inc-card:hover{border-color:var(--b2)}
 .inc-card.inc-active{border-color:var(--g3);background:rgba(201,168,76,.03)}
-.inc-emoji{font-size:28px;margin-bottom:4px}
-.inc-type-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.inc-emoji{font-size:30px}
+.inc-type-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;text-transform:uppercase}
 .inc-agency{background:var(--g4);color:var(--g);border:1px solid var(--b)}
 .inc-personal{background:var(--gdim);color:#81c784;border:1px solid rgba(39,174,96,.25)}
 .inc-team{background:var(--bdim);color:#60a5fa;border:1px solid rgba(59,130,246,.25)}
@@ -221,10 +217,14 @@ html,body{height:100%;background:#000000;color:var(--t);font-family:'Georgia',se
 .inc-reward{font-size:12px;color:var(--g2)}
 .inc-prog-wrap{height:5px;background:var(--b);border-radius:3px;overflow:hidden}
 .inc-prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--g3),var(--g));transition:width .5s}
-.redeem-btn{background:linear-gradient(135deg,var(--g3),var(--g));color:#000;border:none;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Georgia',serif;margin-top:4px;width:100%;text-align:center}
+.redeem-btn{background:linear-gradient(135deg,var(--g3),var(--g));color:#000;border:none;border-radius:6px;padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Georgia',serif;width:100%;text-align:center}
 .redeem-btn:disabled{opacity:.4;cursor:not-allowed;background:var(--d)}
 
-/* ── GH STATUS ─────────────────────────────── */
+/* ── RECRUIT POSTS ────────────────────────── */
+.recruit-post{background:var(--p2);border:1px solid var(--b);border-radius:9px;padding:12px 14px;margin-bottom:8px}
+.recruit-post-hdr{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+
+/* ── GH/DB STATUS ─────────────────────────── */
 .gh-status-row{display:flex;align-items:center;gap:6px;font-size:10px;margin-top:8px}
 .gh-dot{width:7px;height:7px;border-radius:50%;background:var(--d);flex-shrink:0}
 .gh-dot.on{background:var(--grn)}.gh-dot.err{background:var(--red)}
@@ -236,8 +236,7 @@ html,body{height:100%;background:#000000;color:var(--t);font-family:'Georgia',se
 .priv-box{background:rgba(39,174,96,.06);border:1px solid rgba(39,174,96,.2);border-radius:7px;padding:9px 13px;font-size:11px;color:#81c784;line-height:1.7;margin-top:8px}
 
 /* ── USER ROWS ─────────────────────────────── */
-.user-row{background:var(--p2);border:1px solid var(--b);border-radius:9px;padding:12px 14px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;gap:10px;transition:border-color .15s}
-.user-row:hover{border-color:var(--b2)}
+.user-row{background:var(--p2);border:1px solid var(--b);border-radius:9px;padding:12px 14px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;gap:10px}
 .user-row-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
 .user-row-right{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap}
 
@@ -250,10 +249,9 @@ html,body{height:100%;background:#000000;color:var(--t);font-family:'Georgia',se
 .hr{border:none;border-top:1px solid var(--b);margin:12px 0}
 .fl{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .flsb{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
-.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}
-.fw7{font-weight:700}
+.mt8{margin-top:8px}.mt12{margin-top:12px}.fw7{font-weight:700}
 .text-g{color:var(--g)}.text-d{color:var(--d2)}.text-grn{color:#81c784}.text-rd{color:#e57373}
-.text-sm{font-size:11px}.text-xs{font-size:10px}
+.text-xs{font-size:10px}.text-sm{font-size:11px}
 .empty{text-align:center;padding:32px;color:var(--d);font-size:12px}
 
 /* ── TOAST & SYNC ─────────────────────────── */
@@ -262,3 +260,19 @@ html,body{height:100%;background:#000000;color:var(--t);font-family:'Georgia',se
 @keyframes fadeUp{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
 .sync-ind{position:fixed;top:62px;right:16px;background:var(--p1);border:1px solid var(--b);border-radius:6px;padding:4px 10px;font-size:10px;color:var(--d2);z-index:150;display:none;font-family:'Georgia',serif}
 .sync-ind.show{display:block}
+
+/* ── MOBILE ─────────────────────────────────── */
+@media(max-width:768px){
+  .app-hdr{height:auto;min-height:44px;padding:6px 10px;position:relative}
+  .hdr-logo{height:24px;top:50%;transform:translate(-50%,-50%);position:absolute}
+  .hdr-left .btn{font-size:9px;padding:3px 7px}
+  .hdr-right .btn{font-size:9px;padding:3px 7px}
+  .user-nm{display:none}
+  .subnav{padding:5px 10px;top:44px}
+  .tab{font-size:10px;padding:4px 8px}
+  .fr2,.fr3{grid-template-columns:1fr}
+  .incentives-grid{grid-template-columns:1fr}
+  .heatmap-grid{grid-template-columns:repeat(26,1fr)}
+  .modal{padding:16px}
+  .profile-hero{flex-direction:column;align-items:flex-start}
+}
