@@ -36,6 +36,7 @@ const Store = (() => {
   let state={
     users:[],deals:[],spend:[],incentives:[],monthlyReports:[],
     recruitPosts:[],  // private recruit posts per agent
+    personalGoals:[],   // private per-agent goals
     crmMembers:[],crmAgencies:{},crmCounter:5,
     undoStack:[],redoStack:[],
   };
@@ -62,6 +63,7 @@ const Store = (() => {
     try{state.incentives=JSON.parse(localStorage.getItem(IK))||[];}catch(e){state.incentives=[];}
     try{state.monthlyReports=JSON.parse(localStorage.getItem('cc_mrpts'))||[];}catch(e){state.monthlyReports=[];}
     try{state.recruitPosts=JSON.parse(localStorage.getItem(RK))||[];}catch(e){state.recruitPosts=[];}
+    try{state.personalGoals=JSON.parse(localStorage.getItem('cc_goals'))||[];}catch(e){state.personalGoals=[];}
     // CRM — use seed if empty
     try{state.crmMembers=JSON.parse(localStorage.getItem(CRM_MK))||[];}catch(e){state.crmMembers=[];}
     if(!state.crmMembers.length){
@@ -80,6 +82,8 @@ const Store = (() => {
     state.deals.forEach(d=>{
       if(d.referrals===undefined)d.referrals=0;
       if(d.leadType===undefined)d.leadType='';
+      if(d.leadSource===undefined)d.leadSource='';
+      if(d.eftDate===undefined)d.eftDate='';
     });
   }
 
@@ -90,6 +94,7 @@ const Store = (() => {
     try{localStorage.setItem(IK,JSON.stringify(state.incentives));}catch(e){}
     try{localStorage.setItem('cc_mrpts',JSON.stringify(state.monthlyReports));}catch(e){}
     try{localStorage.setItem(RK,JSON.stringify(state.recruitPosts));}catch(e){}
+    try{localStorage.setItem('cc_goals',JSON.stringify(state.personalGoals));}catch(e){}
   }
   function _saveCRMLocal(){
     try{localStorage.setItem(CRM_MK,JSON.stringify(state.crmMembers));}catch(e){}
@@ -104,6 +109,7 @@ const Store = (() => {
       users:state.users,deals:state.deals,spend:state.spend,
       incentives:state.incentives,monthlyReports:state.monthlyReports,
       recruitPosts:state.recruitPosts,
+      personalGoals:state.personalGoals,
       crmMembers:state.crmMembers,crmAgencies:state.crmAgencies,crmCounter:state.crmCounter};
   }
 
@@ -118,6 +124,7 @@ const Store = (() => {
     if(remote.incentives?.length)state.incentives=remote.incentives;
     if(remote.monthlyReports?.length)state.monthlyReports=remote.monthlyReports;
     if(remote.recruitPosts?.length)state.recruitPosts=remote.recruitPosts;
+    if(remote.personalGoals?.length)state.personalGoals=remote.personalGoals;
     if(remote.crmMembers?.length)state.crmMembers=remote.crmMembers;
     if(remote.crmAgencies&&Object.keys(remote.crmAgencies).length)state.crmAgencies=remote.crmAgencies;
     if(remote.crmCounter!==undefined)state.crmCounter=remote.crmCounter;
@@ -131,6 +138,8 @@ const Store = (() => {
     state.deals.forEach(d=>{
       if(d.referrals===undefined)d.referrals=0;
       if(d.leadType===undefined)d.leadType='';
+      if(d.leadSource===undefined)d.leadSource='';
+      if(d.eftDate===undefined)d.eftDate='';
     });
     saveLocal();
     return true;
@@ -251,6 +260,31 @@ const Store = (() => {
     return (incProgressAll(inc,agentId)[0]||{}).current||0;
   }
 
+
+  // Calculate current progress for a personal goal
+  function goalProgress(goal, agentId){
+    const now=new Date();
+    // Determine window start based on reset period
+    let startDate=null;
+    if(goal.period==='daily'){startDate=new Date(now.getFullYear(),now.getMonth(),now.getDate());}
+    else if(goal.period==='weekly'){
+      const day=now.getDay(); // 0=Sun
+      startDate=new Date(now.getFullYear(),now.getMonth(),now.getDate()-day);
+    }
+    else if(goal.period==='monthly'){startDate=new Date(now.getFullYear(),now.getMonth(),1);}
+    else if(goal.period==='yearly'){startDate=new Date(now.getFullYear(),0,1);}
+    const deals=startDate
+      ?state.deals.filter(d=>d.agentId===agentId&&new Date(d.date+'T12:00:00')>=startDate)
+      :state.deals.filter(d=>d.agentId===agentId);
+    const metric=goal.metric||'ap';
+    if(metric==='ap')return totalAP(deals);
+    if(metric==='deals')return deals.length;
+    if(metric==='referrals')return totalReferrals(deals);
+    if(metric==='warmmarket')return deals.filter(d=>d.leadType==='Warm Market').length;
+    if(metric==='days'){const days=new Set(deals.map(d=>d.date));return days.size;}
+    return 0;
+  }
+
   return{
     get users(){return state.users;},
     get deals(){return state.deals;},
@@ -258,6 +292,7 @@ const Store = (() => {
     get incentives(){return state.incentives;},
     get monthlyReports(){return state.monthlyReports;},
     get recruitPosts(){return state.recruitPosts;},
+    get personalGoals(){return state.personalGoals;},
     get crmMembers(){return state.crmMembers;},
     get crmAgencies(){return state.crmAgencies;},
     get crmCounter(){return state.crmCounter;},

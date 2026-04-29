@@ -358,6 +358,8 @@ function renderDashboard(){
   // Recruit posts
   const rpCard=document.getElementById('recruit-posts-card');
   if(rpCard){rpCard.style.display='';renderRecruitPosts();}
+  // Personal goals
+  renderPersonalGoals();
 }
 
 // ── TEAMS ──────────────────────────────────────────────────────
@@ -460,10 +462,29 @@ function renderConsistency(){
 }
 
 // ── INCENTIVES ─────────────────────────────────────────────────
-function renderIncentives(){
+function renderIncentives(tab){
   Store.loadLocal();
   const now=new Date().toISOString().split('T')[0];
-  const allInc=Store.incentives.filter(x=>!x.hidden||(x.hidden&&isOwner()));
+  // Build tabs for owner
+  const tabsEl=document.getElementById('inc-tabs');
+  if(tabsEl){
+    if(isOwner()){
+      tabsEl.innerHTML=`
+        <button class="tf-btn ${!tab||tab==='active'?'active':''}" onclick="renderIncentives('active')">Active Incentives</button>
+        <button class="tf-btn ${tab==='hidden'?'active':''}" onclick="renderIncentives('hidden')">Hidden Incentives</button>`;
+    } else {tabsEl.innerHTML='';}
+  }
+  // Hidden incentives tab (owner only)
+  const hiddenBody=document.getElementById('hidden-inc-body');
+  const mainBody=document.getElementById('incentives-body');
+  if(tab==='hidden'&&isOwner()){
+    if(mainBody)mainBody.style.display='none';
+    if(hiddenBody){hiddenBody.style.display='';renderHiddenIncentives(hiddenBody);}
+    return;
+  }
+  if(hiddenBody)hiddenBody.style.display='none';
+  if(mainBody)mainBody.style.display='';
+  const allInc=Store.incentives.filter(x=>!x.hidden);
   const sorted=[...allInc].sort((a,b)=>new Date(b.startDate||0)-new Date(a.startDate||0));
   if(!sorted.length){document.getElementById('incentives-body').innerHTML=`<div class="empty" style="grid-column:1/-1">No incentives yet.${isOwner()?' Click "+ Add Incentive"':''}</div>`;return;}
   const scopeClasses={agency:'inc-agency',personal:'inc-personal',team:'inc-team'};
@@ -507,6 +528,34 @@ function renderIncentives(){
   document.getElementById('incentives-body').innerHTML=html;
 }
 
+
+function renderHiddenIncentives(container){
+  const hidden=Store.incentives.filter(x=>x.hidden);
+  if(!hidden.length){container.innerHTML='<div class="empty" style="grid-column:1/-1">No hidden incentives. Create one using "+ Add Incentive" with the Hidden toggle.</div>';return;}
+  const now=new Date().toISOString().split('T')[0];
+  let html='<div class="incentives-grid">';
+  hidden.forEach(inc=>{
+    const isActive=(!inc.endDate||inc.endDate>=now)&&(!inc.startDate||inc.startDate<=now);
+    html+=`<div class="inc-card ${isActive?'inc-active':''}">
+      <div class="inc-emoji">${inc.emoji||'🏆'}</div>
+      <div class="fl" style="gap:5px;flex-wrap:wrap">
+        <span class="inc-type-tag badge-r">HIDDEN</span>
+        <span class="inc-type-tag badge-grey">${inc.timeframe||'lifetime'}</span>
+        ${isActive?'<span class="inc-type-tag badge-grn">ACTIVE</span>':''}
+      </div>
+      <div class="inc-title">${inc.title}</div>
+      <div style="font-size:11px;color:var(--d2);line-height:1.6">${inc.desc||''}</div>
+      <div style="font-size:10px;color:var(--d);margin-top:4px">Auto-awards ${inc.emoji||'🏆'} ${inc.badgeTitle||inc.title} badge</div>
+      <div class="fl" style="margin-top:10px">
+        <button class="btn btn-ghost btn-xs" onclick="editInc('${inc.id}')">Edit</button>
+        <button class="btn btn-dan btn-xs" onclick="delInc('${inc.id}')">Remove</button>
+      </div>
+    </div>`;
+  });
+  html+='</div>';
+  container.innerHTML=html;
+}
+
 async function redeemInc(incId){
   if(!cur.agentId)return;
   const inc=Store.incentives.find(x=>x.id===incId);if(!inc)return;
@@ -523,6 +572,8 @@ function openAddInc(){
   ['inc-id','inc-title','inc-reward','inc-desc','inc-emoji','inc-badge-title'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('inc-tf').value='monthly';document.getElementById('inc-scope').value='agency';
   document.getElementById('inc-start').value=new Date().toISOString().split('T')[0];document.getElementById('inc-end').value='';
+  const hidEl=document.getElementById('inc-hidden');if(hidEl)hidEl.checked=false;
+  const hidGrp=document.getElementById('inc-hidden-grp');if(hidGrp)hidGrp.style.display=isOwner()?'':'none';
   _resetMetricRows([{metric:'ap',goal:''}]);
   openMod('modal-inc');
 }
@@ -534,6 +585,8 @@ function editInc(id){
   document.getElementById('inc-start').value=inc.startDate||'';document.getElementById('inc-end').value=inc.endDate||'';
   document.getElementById('inc-reward').value=inc.reward||'';document.getElementById('inc-desc').value=inc.desc||'';
   document.getElementById('inc-emoji').value=inc.emoji||'';document.getElementById('inc-badge-title').value=inc.badgeTitle||'';
+  const hidEl=document.getElementById('inc-hidden');if(hidEl)hidEl.checked=!!inc.hidden;
+  const hidGrp2=document.getElementById('inc-hidden-grp');if(hidGrp2)hidGrp2.style.display=isOwner()?'':'none';
   const metrics=inc.metrics&&inc.metrics.length?inc.metrics:[{metric:inc.metric||'ap',goal:inc.goal||0}];
   _resetMetricRows(metrics);
   openMod('modal-inc');
@@ -853,6 +906,85 @@ async function giveBadge(){
 }
 async function removeBadge(userId,badgeId){const ok=await showConfirm('Remove Badge','Remove this badge?','Remove');if(!ok)return;const u=Store.users.find(x=>x.id===userId);if(!u)return;u.badges=(u.badges||[]).filter(b=>b.id!==badgeId);if(u.wornBadgeId===badgeId)u.wornBadgeId=null;if(cur.id===userId){cur.badges=u.badges;cur.wornBadgeId=u.wornBadgeId;_updateWornBadge();}await Store.saveAll();_renderProfile(u);toast('Badge removed');}
 
+
+// ── PERSONAL GOALS ─────────────────────────────────────────────
+const GOAL_METRIC_LABELS={ap:'AP',deals:'Deals',referrals:'Referrals',warmmarket:'Warm Market',days:'Days Active'};
+const GOAL_PERIOD_LABELS={none:'Ongoing',daily:'Daily',weekly:'Weekly',monthly:'Monthly',yearly:'Yearly'};
+
+function renderPersonalGoals(){
+  if(!cur.agentId&&!isOwner())return;
+  const card=document.getElementById('personal-goals-card');
+  const list=document.getElementById('personal-goals-list');
+  if(!card||!list)return;
+  // Only agent and owner can see
+  if(!cur.agentId&&!isOwner()){card.style.display='none';return;}
+  card.style.display='';
+  const myGoals=Store.personalGoals.filter(g=>g.agentId===cur.agentId);
+  if(!myGoals.length){list.innerHTML='<div class="empty" style="padding:16px">No personal goals set. Add one to track your own standards.</div>';return;}
+  list.innerHTML=myGoals.map(g=>{
+    const current=Store.goalProgress(g,cur.agentId);
+    const target=parseFloat(g.target)||1;
+    const pct=Math.min(100,Math.round((current/target)*100));
+    const isAP=g.metric==='ap';
+    const curFmt=isAP?fmtFull(current):fmtNum(current);
+    const tgtFmt=isAP?fmtFull(target):fmtNum(target);
+    const done=pct>=100;
+    return`<div style="margin-bottom:12px">
+      <div class="flsb" style="margin-bottom:4px">
+        <div>
+          <span class="fw7" style="font-size:13px;color:${done?'#81c784':'var(--t)'}">${g.name}</span>
+          ${done?'<span style="font-size:12px;margin-left:6px">✓</span>':''}
+          <span class="badge badge-grey" style="font-size:8px;margin-left:6px">${GOAL_PERIOD_LABELS[g.period]||g.period}</span>
+        </div>
+        <div class="fl" style="gap:6px">
+          <span style="font-size:11px;color:var(--d2)">${curFmt} / ${tgtFmt}</span>
+          <button class="btn btn-ghost btn-xs" onclick="editGoal('${g.id}')">Edit</button>
+          <button class="btn btn-dan btn-xs" onclick="deleteGoal('${g.id}')">✕</button>
+        </div>
+      </div>
+      <div style="height:8px;background:var(--b);border-radius:4px;overflow:hidden">
+        <div style="height:100%;border-radius:4px;width:${pct}%;background:${done?'linear-gradient(90deg,#27ae60,#81c784)':'linear-gradient(90deg,var(--g3),var(--g))'};transition:width .5s"></div>
+      </div>
+      <div style="font-size:9px;color:var(--d);margin-top:2px">${GOAL_METRIC_LABELS[g.metric]||g.metric} · ${pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+function openAddGoal(){
+  document.getElementById('goal-modal-ttl').textContent='Add Personal Goal';
+  document.getElementById('goal-id').value='';
+  document.getElementById('goal-name').value='';
+  document.getElementById('goal-metric').value='ap';
+  document.getElementById('goal-target').value='';
+  document.getElementById('goal-period').value='none';
+  openMod('modal-goal');
+}
+function editGoal(id){
+  const g=Store.personalGoals.find(x=>x.id===id);if(!g)return;
+  document.getElementById('goal-modal-ttl').textContent='Edit Goal';
+  document.getElementById('goal-id').value=id;
+  document.getElementById('goal-name').value=g.name||'';
+  document.getElementById('goal-metric').value=g.metric||'ap';
+  document.getElementById('goal-target').value=g.target||'';
+  document.getElementById('goal-period').value=g.period||'none';
+  openMod('modal-goal');
+}
+async function saveGoal(){
+  const id=document.getElementById('goal-id').value;
+  const name=document.getElementById('goal-name').value.trim();
+  if(!name){toast('Goal name required');return;}
+  if(!cur.agentId){toast('Not linked to agent account');return;}
+  const obj={id:id||Store.uid(),agentId:cur.agentId,name,metric:document.getElementById('goal-metric').value,target:parseFloat(document.getElementById('goal-target').value)||0,period:document.getElementById('goal-period').value,createdAt:new Date().toISOString()};
+  if(id){const idx=Store.personalGoals.findIndex(x=>x.id===id);if(idx>-1)Store.personalGoals.splice(idx,1,obj);}
+  else Store.personalGoals.push(obj);
+  await Store.saveAll();closeMod('modal-goal');renderPersonalGoals();toast('Goal saved');
+}
+async function deleteGoal(id){
+  const ok=await showConfirm('Remove Goal','Remove this personal goal?','Remove');if(!ok)return;
+  const idx=Store.personalGoals.findIndex(x=>x.id===id);if(idx>-1)Store.personalGoals.splice(idx,1);
+  await Store.saveAll();renderPersonalGoals();toast('Goal removed');
+}
+
 // ── RECRUIT POSTS ──────────────────────────────────────────────
 function renderRecruitPosts(){
   if(!cur.agentId)return;
@@ -887,7 +1019,7 @@ function dealRowHtml(d,showAgent,adminEdit){
           ${d.leadType?`<span class="badge badge-grey">${d.leadType}</span>`:''}
           ${d.referrals?`<span class="badge badge-blue">${d.referrals} refs</span>`:''}
         </div>
-        <div class="deal-meta">${fmtDate(d.date)} · MP ${fmt$(d.mp)}${d.carrier?' · '+d.carrier:''}${d.notes?' · <span style="color:var(--g3)">&#8659; notes</span>':''}</div>
+        <div class="deal-meta">${fmtDate(d.date)} · MP ${fmt$(d.mp)}${d.carrier?' · '+d.carrier:''}${d.leadSource?' · '+d.leadSource:''}${d.eftDate?' · EFT '+d.eftDate:''}${d.notes?' · <span style="color:var(--g3)">&#8659; notes</span>':''}</div>
       </div>
       <div class="fl" style="flex-shrink:0">
         ${canEdit?`<button class="btn btn-ghost btn-xs" onclick="openEditDeal('${d.id}',event)">Edit</button><button class="btn btn-dan btn-xs" onclick="delDeal('${d.id}',event)">Remove</button>`:''}
@@ -906,6 +1038,8 @@ function openPostDeal(){
   document.getElementById('pd-id').value='';document.getElementById('pd-mp').value='';document.getElementById('pd-ap-show').value='';
   document.getElementById('pd-carrier').value='';document.getElementById('pd-ptype').value='';
   document.getElementById('pd-leadtype').value='';document.getElementById('pd-refs').value='0';
+  const ls=document.getElementById('pd-leadsource');if(ls)ls.value='';
+  const eft=document.getElementById('pd-eft');if(eft)eft.value='';
   document.getElementById('pd-notes').value='';
   // Hide dashboard from owner
   const dashTab=Array.from(document.querySelectorAll('.tab')).find(t=>(t.getAttribute('onclick')||'').includes("'dashboard'"));
@@ -920,6 +1054,8 @@ function openEditDeal(id,e){if(e)e.stopPropagation();const d=Store.deals.find(x=
   document.getElementById('pd-ap-show').value='$'+d.ap.toFixed(2)+' AP';
   document.getElementById('pd-carrier').value=d.carrier||'';document.getElementById('pd-ptype').value=d.policyType||'';
   document.getElementById('pd-leadtype').value=d.leadType||'';document.getElementById('pd-refs').value=d.referrals||0;
+  const lsE=document.getElementById('pd-leadsource');if(lsE)lsE.value=d.leadSource||'';
+  const eftE=document.getElementById('pd-eft');if(eftE)eftE.value=d.eftDate||'';
   document.getElementById('pd-notes').value=d.notes||'';document.getElementById('deal-err').style.display='none';openMod('modal-deal');
 }
 function calcAP(){const mp=parseFloat(document.getElementById('pd-mp').value)||0;document.getElementById('pd-ap-show').value=mp>0?'$'+(mp*12).toFixed(2)+' AP':'';}
@@ -930,10 +1066,12 @@ async function submitDeal(){
   if(!date){errEl.textContent='Please select a date.';errEl.style.display='block';return;}
   if(!cur.agentId){errEl.textContent='Not linked to an agent account.';errEl.style.display='block';return;}
   const leadType=document.getElementById('pd-leadtype').value;
+  const leadSource=document.getElementById('pd-leadsource')?.value?.trim()||'';
+  const eftDate=document.getElementById('pd-eft')?.value?.trim()||'';
   const referrals=parseInt(document.getElementById('pd-refs').value)||0;
   const id=document.getElementById('pd-id').value;
-  if(id){const d=Store.deals.find(x=>x.id===id);if(d){d.date=date;d.mp=parseFloat(mp.toFixed(2));d.ap=parseFloat((mp*12).toFixed(2));d.carrier=document.getElementById('pd-carrier').value.trim();d.policyType=document.getElementById('pd-ptype').value;d.leadType=leadType;d.referrals=referrals;d.notes=document.getElementById('pd-notes').value.trim();d.editedAt=new Date().toISOString();}}
-  else{Store.deals.push({id:Store.uid(),agentId:cur.agentId,agentName:cur.agentName,agencyId:cur.agencyId,date,mp:parseFloat(mp.toFixed(2)),ap:parseFloat((mp*12).toFixed(2)),carrier:document.getElementById('pd-carrier').value.trim(),policyType:document.getElementById('pd-ptype').value,leadType,referrals,notes:document.getElementById('pd-notes').value.trim(),createdAt:new Date().toISOString(),editedAt:null});}
+  if(id){const d=Store.deals.find(x=>x.id===id);if(d){d.date=date;d.mp=parseFloat(mp.toFixed(2));d.ap=parseFloat((mp*12).toFixed(2));d.carrier=document.getElementById('pd-carrier').value.trim();d.policyType=document.getElementById('pd-ptype').value;d.leadType=leadType;d.leadSource=leadSource;d.eftDate=eftDate;d.referrals=referrals;d.notes=document.getElementById('pd-notes').value.trim();d.editedAt=new Date().toISOString();}}
+  else{Store.deals.push({id:Store.uid(),agentId:cur.agentId,agentName:cur.agentName,agencyId:cur.agencyId,date,mp:parseFloat(mp.toFixed(2)),ap:parseFloat((mp*12).toFixed(2)),carrier:document.getElementById('pd-carrier').value.trim(),policyType:document.getElementById('pd-ptype').value,leadType,leadSource,eftDate,referrals,notes:document.getElementById('pd-notes').value.trim(),createdAt:new Date().toISOString(),editedAt:null});}
   await Store.saveAll();closeMod('modal-deal');toast((id?'Updated':'Submitted')+' — '+fmtFull(mp*12)+' AP');refresh();
 }
 async function delDeal(id,e){if(e)e.stopPropagation();const d=Store.deals.find(x=>x.id===id);if(!d)return;
