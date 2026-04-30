@@ -159,13 +159,19 @@ function showConfirm(title,msg,okLabel='Confirm',danger=true){
 function closeConfirm(result){document.getElementById('confirm-ov').classList.remove('open');if(_confirmResolve){_confirmResolve(result);_confirmResolve=null;}}
 
 // ── SESSION ────────────────────────────────────────────────────
-// ── SESSION — in-memory only, no localStorage ──────────────────
+// ── SESSION — sessionStorage only (survives refresh, clears on tab close) ──
 const INACTIVITY_MS=10*60*1000;let _inactivityTimer=null;
-let _sessionUser=null; // in-memory session
-function _saveSession(u){_sessionUser=u;}
-function _clearSession(){_sessionUser=null;}
-function _loadSession(){return null;} // fresh load every time — no persistence
-function _resetTimer(){clearTimeout(_inactivityTimer);_inactivityTimer=setTimeout(()=>{doLogout();toast('Signed out due to inactivity');},INACTIVITY_MS);}
+function _saveSession(u){try{sessionStorage.setItem('cc_session',JSON.stringify({userId:u.id,savedAt:Date.now()}));}catch(e){}}
+function _clearSession(){try{sessionStorage.removeItem('cc_session');}catch(e){}}
+function _loadSession(){
+  try{
+    const s=JSON.parse(sessionStorage.getItem('cc_session'));
+    if(!s)return null;
+    if(Date.now()-s.savedAt>INACTIVITY_MS){_clearSession();return null;}
+    return s;
+  }catch(e){return null;}
+}
+function _resetTimer(){clearTimeout(_inactivityTimer);try{const s=JSON.parse(sessionStorage.getItem('cc_session')||'null');if(s)sessionStorage.setItem('cc_session',JSON.stringify({...s,savedAt:Date.now()}));}catch(e){}  _inactivityTimer=setTimeout(()=>{doLogout();toast('Signed out due to inactivity');},INACTIVITY_MS);}
 function _startActivity(){['mousemove','mousedown','keydown','touchstart','scroll','click'].forEach(e=>document.addEventListener(e,_resetTimer,{passive:true}));_resetTimer();}
 function _stopActivity(){clearTimeout(_inactivityTimer);['mousemove','mousedown','keydown','touchstart','scroll','click'].forEach(e=>document.removeEventListener(e,_resetTimer));}
 
@@ -182,7 +188,20 @@ document.addEventListener('DOMContentLoaded',()=>{
     else if((e.metaKey||e.ctrlKey)&&((e.key==='z'&&e.shiftKey)||e.key==='y')){e.preventDefault();doRedo();}
   });
   const session=_loadSession();
-  if(session){Store.loadLocal();const u=Store.users.find(x=>x.id===session.userId&&x.active!==false);if(u){cur=u;enterApp();_startActivity();Store.syncFromGH().then(ok=>{if(ok){refresh();GH.startLiveSync();}});}}
+  if(session){
+    Store.loadLocal();
+    Store.syncFromGH().then(ok=>{
+      const u=Store.users.find(x=>x.id===session.userId&&x.active!==false);
+      if(u){
+        cur=u;
+        // Restore last active tab
+        const savedTab=sessionStorage.getItem('cc_tab')||'home';
+        enterApp(savedTab);
+        _startActivity();
+        if(ok)refresh();
+      }
+    });
+  }
 });
 
 // ── AUTH ───────────────────────────────────────────────────────
@@ -229,7 +248,7 @@ function _updateWornBadge(){
   wrap.innerHTML=icons;
 }
 
-function enterApp(){
+function enterApp(startTab){
   document.getElementById('login-page').style.display='none';
   document.getElementById('app').style.display='flex';
   const nm=cur.agentName||cur.username;
@@ -266,7 +285,7 @@ function enterApp(){
   _updateWornBadge();
   if(cur.id)applyThemeAndFont(cur.id);
   GH.startLiveSync();
-  switchTab('home');
+  switchTab(startTab||'home');
   _autoSaveMonthlyReport();
 }
 
@@ -347,6 +366,8 @@ function switchTab(name,btn){
   const v=document.getElementById('view-'+name);if(v)v.classList.add('active');
   if(btn)btn.classList.add('active');
   else{const f=Array.from(document.querySelectorAll('.tab')).find(t=>(t.getAttribute('onclick')||'').includes("'"+name+"'"));if(f)f.classList.add('active');}
+  // Remember active tab across refreshes
+  try{sessionStorage.setItem('cc_tab',name);}catch(e){}
   Store.loadLocal();
   const r={home:renderHome,dashboard:renderDashboard,leaderboard:renderLeaderboard,teams:renderTeams,consistency:renderConsistency,incentives:renderIncentives,manage:renderManage,reports:renderReports};
   if(r[name])r[name]();
