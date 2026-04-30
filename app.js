@@ -72,6 +72,13 @@ const THEMES = {
     '--b':'rgba(123,159,212,0.18)','--b2':'rgba(123,159,212,0.40)',
     '--t':'#d6e4f7','--d':'#1e3060','--d2':'#4a6898',
   },
+  'white': {
+    // White — clean light mode, all text black
+    '--p1':'#f5f5f5','--p2':'#ebebeb','--p3':'#e0e0e0','--p4':'#d5d5d5',
+    '--g':'#1a1a1a','--g2':'#000000','--g3':'#444444','--g4':'rgba(0,0,0,0.06)',
+    '--b':'rgba(0,0,0,0.14)','--b2':'rgba(0,0,0,0.28)',
+    '--t':'#0a0a0a','--d':'#555555','--d2':'#333333',
+  },
   'silver': {
     // Futuristic Silver — cold chrome, near-black with electric steel highlights
     '--p1':'#060809','--p2':'#0a0e10','--p3':'#0e1318','--p4':'#12181f',
@@ -108,19 +115,30 @@ function applyThemeAndFont(userId){
   // Apply theme — never touch header bg (always black)
   const theme=THEMES[prefs.theme||'default']||THEMES.default;
   Object.entries(theme).forEach(([k,v])=>document.documentElement.style.setProperty(k,v));
+  // White theme needs body bg set directly
+  if((prefs.theme||'default')==='white'){
+    document.body.style.background='#f5f5f5';
+    document.documentElement.style.setProperty('--bg','#f5f5f5');
+  } else {
+    document.body.style.background='';
+    document.documentElement.style.setProperty('--bg','#000000');
+  document.body.style.background='';
+  }
   // Apply font — does NOT change size
   const font=FONTS[prefs.font||'Georgia']||FONTS['Georgia'];
   document.documentElement.style.setProperty('--font-body', font.stack);
   document.body.style.fontFamily=font.stack;
   // Header always black regardless of theme
   document.documentElement.style.setProperty('--bg','#000000');
+  document.body.style.background='';
 }
 
 async function saveUserPrefs(userId, key, value){
   const prefs=_getPrefs(userId);
   prefs[key]=value;
-  await _savePrefs(userId, prefs);
-  applyThemeAndFont(userId);
+  applyThemeAndFont(userId); // apply instantly
+  await _savePrefs(userId, prefs); // then push to Firebase
+  toast('Appearance saved to your account ✓');
 }
 
 // ── CONFIRM DIALOG ─────────────────────────────────────────────
@@ -1037,6 +1055,7 @@ function _renderProfile(u){
       <select id="sett-theme" onchange="saveUserPrefs('${u.id}','theme',this.value)" style="font-family:inherit">
         <option value="default" ${(_getPrefs(u.id).theme||'default')==='default'?'selected':''}>Default — Black & Gold</option>
         <option value="deep-blue" ${_getPrefs(u.id).theme==='deep-blue'?'selected':''}>Deep Blue Glass</option>
+        <option value="white" ${_getPrefs(u.id).theme==='white'?'selected':''}>White</option>
         <option value="silver" ${_getPrefs(u.id).theme==='silver'?'selected':''}>Futuristic Silver</option>
       </select>
     </div>
