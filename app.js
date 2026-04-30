@@ -56,6 +56,67 @@ function agentBadgeDisplay(agentId, dealDate){
   return icons;
 }
 
+
+// ── THEME & FONT SYSTEM ────────────────────────────────────────
+const THEMES = {
+  default: {
+    '--p1':'#080808','--p2':'#0f0f0f','--p3':'#161616','--p4':'#1c1c1c',
+    '--g':'#c9a84c','--g2':'#f0d080','--g3':'#8a6e30','--g4':'rgba(201,168,76,0.10)',
+    '--b':'rgba(201,168,76,0.18)','--b2':'rgba(201,168,76,0.38)',
+    '--t':'#e8dfc8','--d':'#6a6050','--d2':'#9a8f7a',
+  },
+  'deep-blue': {
+    '--p1':'#060d1a','--p2':'#0a1628','--p3':'#0d1e35','--p4':'#102642',
+    '--g':'#4a9eff','--g2':'#7bbfff','--g3':'#2a6ec9','--g4':'rgba(74,158,255,0.10)',
+    '--b':'rgba(74,158,255,0.18)','--b2':'rgba(74,158,255,0.38)',
+    '--t':'#d0e8ff','--d':'#3a5a80','--d2':'#6a90b8',
+  },
+  silver: {
+    '--p1':'#111114','--p2':'#18181c','--p3':'#1e1e23','--p4':'#242429',
+    '--g':'#b8c4cc','--g2':'#dde4e8','--g3':'#7a8a94','--g4':'rgba(184,196,204,0.10)',
+    '--b':'rgba(184,196,204,0.18)','--b2':'rgba(184,196,204,0.38)',
+    '--t':'#e0e6ea','--d':'#5a6368','--d2':'#8a9298',
+  },
+};
+
+const FONTS = {
+  'Georgia':        {label:'Georgia',       stack:'Georgia, serif'},
+  'Palatino':       {label:'Palatino',      stack:'"Palatino Linotype", Palatino, serif'},
+  'Garamond':       {label:'Garamond',      stack:'Garamond, "EB Garamond", serif'},
+  'Helvetica':      {label:'Helvetica',     stack:'Helvetica, Arial, sans-serif'},
+  'Futura':         {label:'Futura',        stack:'"Century Gothic", Futura, sans-serif'},
+  'Courier':        {label:'Courier',       stack:'"Courier New", Courier, monospace'},
+  'Optima':         {label:'Optima',        stack:'Optima, "Segoe UI", sans-serif'},
+  'Baskerville':    {label:'Baskerville',   stack:'Baskerville, "Libre Baskerville", serif'},
+};
+
+function _getPrefs(userId){
+  try{return JSON.parse(localStorage.getItem('cc_prefs_'+userId))||{};}catch(e){return{};}
+}
+function _savePrefs(userId, prefs){
+  localStorage.setItem('cc_prefs_'+userId, JSON.stringify(prefs));
+}
+
+function applyThemeAndFont(userId){
+  const prefs=_getPrefs(userId);
+  // Apply theme — never touch header bg (always black)
+  const theme=THEMES[prefs.theme||'default']||THEMES.default;
+  Object.entries(theme).forEach(([k,v])=>document.documentElement.style.setProperty(k,v));
+  // Apply font — does NOT change size
+  const font=FONTS[prefs.font||'Georgia']||FONTS['Georgia'];
+  document.documentElement.style.setProperty('--font-body', font.stack);
+  document.body.style.fontFamily=font.stack;
+  // Header always black regardless of theme
+  document.documentElement.style.setProperty('--bg','#000000');
+}
+
+function saveUserPrefs(userId, key, value){
+  const prefs=_getPrefs(userId);
+  prefs[key]=value;
+  _savePrefs(userId, prefs);
+  applyThemeAndFont(userId);
+}
+
 // ── CONFIRM DIALOG ─────────────────────────────────────────────
 let _confirmResolve=null;
 function showConfirm(title,msg,okLabel='Confirm',danger=true){
@@ -161,6 +222,7 @@ function enterApp(){
   // Check birthday warrior
   _checkBirthdayWarrior();
   _updateWornBadge();
+  if(cur.id)applyThemeAndFont(cur.id);
   GH.startLiveSync();
   switchTab('home');
   _autoSaveMonthlyReport();
@@ -411,8 +473,8 @@ function renderTeams(){
     html+=`<div class="team-card" id="tc-${u.id}">
       <div class="team-hdr" onclick="toggleTeam('${u.id}')">
         <div class="fl" style="gap:10px">
-          <div class="agent-av-sm" style="width:40px;height:40px;font-size:13px;cursor:pointer" onclick="openProfile('${u.agentId}',event)">${avImg}</div>
-          <div><div style="font-size:14px;font-weight:700;color:var(--t);cursor:pointer" onclick="openProfile('${u.agentId}',event)">${agentBadgeDisplay(u.agentId,null)} ${u.agentName}</div>
+          <div class="agent-av-sm" style="width:40px;height:40px;font-size:13px">${avImg}</div>
+          <div><div style="font-size:14px;font-weight:700;color:var(--t)">${agentBadgeDisplay(u.agentId,null)} ${u.agentName}</div>
           <div style="font-size:10px;color:var(--d2);margin-top:2px">${Store.agN(m?.agency)} · ${downUsers.length} downline · ${myD.length} personal deals</div></div>
         </div>
         <div style="text-align:right"><div style="font-size:18px;font-weight:700;color:var(--g)">${fmt$(teamAP)}</div>
@@ -947,7 +1009,22 @@ function _renderProfile(u){
     <div class="fg"><label>Change Username</label><input type="text" id="sett-username" value="${u.username||''}"></div>
     <div class="fg"><label>New Password (leave blank to keep current)</label><input type="text" id="sett-password" placeholder="New password..."></div>
     <div id="sett-err" class="warn-box mt8" style="display:none"></div>
-    <button class="btn btn-pri" onclick="saveSettings('${u.id}')">Save Settings</button>
+    <button class="btn btn-pri" onclick="saveSettings('${u.id}')">Save Credentials</button>
+    <div class="hr" style="margin:18px 0"></div>
+    <div class="ct">Appearance</div>
+    <div class="fg"><label>Color Theme (header always stays black)</label>
+      <select id="sett-theme" onchange="saveUserPrefs('${u.id}','theme',this.value)" style="font-family:inherit">
+        <option value="default" ${(_getPrefs(u.id).theme||'default')==='default'?'selected':''}>Default — Black & Gold</option>
+        <option value="deep-blue" ${_getPrefs(u.id).theme==='deep-blue'?'selected':''}>Deep Blue Glass</option>
+        <option value="silver" ${_getPrefs(u.id).theme==='silver'?'selected':''}>Silver</option>
+      </select>
+    </div>
+    <div class="fg"><label>Font</label>
+      <select id="sett-font" onchange="saveUserPrefs('${u.id}','font',this.value)">
+        ${Object.entries(FONTS).map(([key,f])=>`<option value="${key}" style="font-family:${f.stack}" ${(_getPrefs(u.id).font||'Georgia')===key?'selected':''}>${f.label}</option>`).join('')}
+      </select>
+    </div>
+    <div class="info-box" style="margin-top:8px">Font and color changes apply only to your account on this device. Header background is always black.</div>
   </div>
   <div id="pt-edit" style="display:none">
     <div class="fg"><label>Bio</label><textarea id="prof-bio" rows="4" placeholder="Write a short bio...">${u.bio||''}</textarea></div>
