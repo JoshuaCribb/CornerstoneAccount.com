@@ -66,16 +66,18 @@ const THEMES = {
     '--t':'#e8dfc8','--d':'#6a6050','--d2':'#9a8f7a',
   },
   'deep-blue': {
-    '--p1':'#020810','--p2':'#050e1e','--p3':'#07122a','--p4':'#091636',
-    '--g':'#3d8ef0','--g2':'#6aaeff','--g3':'#1a5cb8','--g4':'rgba(61,142,240,0.10)',
-    '--b':'rgba(61,142,240,0.18)','--b2':'rgba(61,142,240,0.40)',
-    '--t':'#c8dfff','--d':'#2a4a70','--d2':'#5a80aa',
+    // Duke Blue — deep navy with cool indigo-white text, no Carolina blue
+    '--p1':'#020610','--p2':'#04091c','--p3':'#060c28','--p4':'#080f34',
+    '--g':'#7b9fd4','--g2':'#a8c4e8','--g3':'#3a5a9a','--g4':'rgba(123,159,212,0.10)',
+    '--b':'rgba(123,159,212,0.18)','--b2':'rgba(123,159,212,0.40)',
+    '--t':'#d6e4f7','--d':'#1e3060','--d2':'#4a6898',
   },
   'silver': {
-    '--p1':'#080b0f','--p2':'#0d1117','--p3':'#121920','--p4':'#172028',
-    '--g':'#e8f4f8','--g2':'#ffffff','--g3':'#7eb8d4','--g4':'rgba(232,244,248,0.08)',
-    '--b':'rgba(232,244,248,0.15)','--b2':'rgba(232,244,248,0.35)',
-    '--t':'#e8f4f8','--d':'#3a5060','--d2':'#8ab4c8',
+    // Futuristic Silver — cold chrome, near-black with electric steel highlights
+    '--p1':'#060809','--p2':'#0a0e10','--p3':'#0e1318','--p4':'#12181f',
+    '--g':'#c8dde8','--g2':'#eaf4ff','--g3':'#6a9ab0','--g4':'rgba(200,221,232,0.08)',
+    '--b':'rgba(200,221,232,0.14)','--b2':'rgba(200,221,232,0.32)',
+    '--t':'#ddeeff','--d':'#2a3a44','--d2':'#6a8898',
   },
 };
 
@@ -91,17 +93,14 @@ const FONTS = {
 };
 
 function _getPrefs(userId){
-  // Firebase-synced user record takes priority; fall back to localStorage
+  // Read from Firebase-synced user record only
   const u=Store.users.find(x=>x.id===userId);
-  if(u?.prefs&&Object.keys(u.prefs).length)return u.prefs;
-  try{return JSON.parse(localStorage.getItem('cc_prefs_'+userId))||{};}catch(e){return{};}
+  return u?.prefs||{};
 }
-function _savePrefs(userId, prefs){
-  // Save to localStorage for instant apply
-  localStorage.setItem('cc_prefs_'+userId,JSON.stringify(prefs));
-  // Save to user record so it syncs to Firebase across all devices
+async function _savePrefs(userId, prefs){
+  // Save to user record — pushes to Firebase
   const u=Store.users.find(x=>x.id===userId);
-  if(u){u.prefs=prefs;Store.saveAll();}
+  if(u){u.prefs=prefs;await Store.saveAll();}
 }
 
 function applyThemeAndFont(userId){
@@ -117,10 +116,10 @@ function applyThemeAndFont(userId){
   document.documentElement.style.setProperty('--bg','#000000');
 }
 
-function saveUserPrefs(userId, key, value){
+async function saveUserPrefs(userId, key, value){
   const prefs=_getPrefs(userId);
   prefs[key]=value;
-  _savePrefs(userId, prefs);
+  await _savePrefs(userId, prefs);
   applyThemeAndFont(userId);
 }
 
@@ -139,11 +138,13 @@ function showConfirm(title,msg,okLabel='Confirm',danger=true){
 function closeConfirm(result){document.getElementById('confirm-ov').classList.remove('open');if(_confirmResolve){_confirmResolve(result);_confirmResolve=null;}}
 
 // ── SESSION ────────────────────────────────────────────────────
-const SESSION_KEY='cc_session';const INACTIVITY_MS=10*60*1000;let _inactivityTimer=null;
-function _saveSession(u){localStorage.setItem(SESSION_KEY,JSON.stringify({userId:u.id,savedAt:Date.now()}));}
-function _clearSession(){localStorage.removeItem(SESSION_KEY);}
-function _loadSession(){try{const s=JSON.parse(localStorage.getItem(SESSION_KEY));if(!s)return null;if(Date.now()-s.savedAt>INACTIVITY_MS){_clearSession();return null;}return s;}catch(e){return null;}}
-function _resetTimer(){clearTimeout(_inactivityTimer);const s=JSON.parse(localStorage.getItem(SESSION_KEY)||'null');if(s)localStorage.setItem(SESSION_KEY,JSON.stringify({...s,savedAt:Date.now()}));_inactivityTimer=setTimeout(()=>{doLogout();toast('Signed out due to inactivity');},INACTIVITY_MS);}
+// ── SESSION — in-memory only, no localStorage ──────────────────
+const INACTIVITY_MS=10*60*1000;let _inactivityTimer=null;
+let _sessionUser=null; // in-memory session
+function _saveSession(u){_sessionUser=u;}
+function _clearSession(){_sessionUser=null;}
+function _loadSession(){return null;} // fresh load every time — no persistence
+function _resetTimer(){clearTimeout(_inactivityTimer);_inactivityTimer=setTimeout(()=>{doLogout();toast('Signed out due to inactivity');},INACTIVITY_MS);}
 function _startActivity(){['mousemove','mousedown','keydown','touchstart','scroll','click'].forEach(e=>document.addEventListener(e,_resetTimer,{passive:true}));_resetTimer();}
 function _stopActivity(){clearTimeout(_inactivityTimer);['mousemove','mousedown','keydown','touchstart','scroll','click'].forEach(e=>document.removeEventListener(e,_resetTimer));}
 
@@ -177,6 +178,8 @@ async function doLogin(){
   if(!u){document.getElementById('l-err').style.display='block';return;}
   document.getElementById('l-err').style.display='none';
   cur=u;_saveSession(u);enterApp();_startActivity();
+  // Re-apply theme after sync since prefs live in Firebase user record
+  if(cur.id)applyThemeAndFont(cur.id);
 }
 function doLogout(){
   _clearSession();_stopActivity();GH.stopLiveSync();cur=null;
@@ -1042,7 +1045,7 @@ function _renderProfile(u){
         ${Object.entries(FONTS).map(([key,f])=>`<option value="${key}" style="font-family:${f.stack}" ${(_getPrefs(u.id).font||'Georgia')===key?'selected':''}>${f.label}</option>`).join('')}
       </select>
     </div>
-    <div class="info-box" style="margin-top:8px">Font and color changes apply only to your account on this device. Header background is always black.</div>
+    <div class="info-box" style="margin-top:8px">Font and color are saved to your account in Firebase — they follow you across all devices. Header background is always black.</div>
   </div>
   <div id="pt-edit" style="display:none">
     <div class="fg"><label>Bio</label><textarea id="prof-bio" rows="4" placeholder="Write a short bio...">${u.bio||''}</textarea></div>

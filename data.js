@@ -3,8 +3,6 @@
 ═══════════════════════════════════════════════════════════════ */
 const Store = (() => {
 
-  const UK='cc_users',DK='cc_deals',SK='cc_spend',IK='cc_inc',RK='cc_recruits';
-  const CRM_MK='cc_crm_v13',CRM_AK='cc_ag_v8',CRM_CK='cc_ctr_v1';
   const MAX_UNDO=80;
 
   // ── DEFAULT PORTAL ACCOUNTS ────────────────────────────────────
@@ -44,9 +42,15 @@ const Store = (() => {
 
   // ── LOAD LOCAL ─────────────────────────────────────────────────
   function loadLocal(){
-    try{state.users=JSON.parse(localStorage.getItem(UK))||[];}catch(e){state.users=[];}
-    if(!state.users.length){state.users=JSON.parse(JSON.stringify(DEF_USERS));_savePortalLocal();}
+    // Seeds defaults into memory — real data always comes from Firebase via syncFromGH()
+    if(!state.users.length) state.users=JSON.parse(JSON.stringify(DEF_USERS));
     DEF_USERS.forEach(du=>{if(!state.users.find(u=>u.id===du.id))state.users.push({...du});});
+    _migrateState();
+    if(!state.crmMembers.length) state.crmMembers=JSON.parse(JSON.stringify(SEED_MEMBERS));
+    if(!Object.keys(state.crmAgencies).length) state.crmAgencies=JSON.parse(JSON.stringify(SEED_AGENCIES));
+  }
+
+  function _migrateState(){
     state.users.forEach(u=>{
       if(u.bio===undefined)u.bio='';
       if(u.links===undefined)u.links={};
@@ -57,34 +61,8 @@ const Store = (() => {
       if(u.wornBadgeId===undefined)u.wornBadgeId=null;
       if(u.wornBadges===undefined)u.wornBadges=['','',''];
       if(u.prefs===undefined)u.prefs={};
-      // Preserve manager role
-      if(u.role==='manager')u.role='manager';
-
-      // remove founders
       if(u.id==='u_elite'||u.username==='founders')u.active=false;
     });
-    try{state.deals=JSON.parse(localStorage.getItem(DK))||[];}catch(e){state.deals=[];}
-    try{state.spend=JSON.parse(localStorage.getItem(SK))||[];}catch(e){state.spend=[];}
-    try{state.incentives=JSON.parse(localStorage.getItem(IK))||[];}catch(e){state.incentives=[];}
-    try{state.monthlyReports=JSON.parse(localStorage.getItem('cc_mrpts'))||[];}catch(e){state.monthlyReports=[];}
-    try{state.recruitPosts=JSON.parse(localStorage.getItem(RK))||[];}catch(e){state.recruitPosts=[];}
-    try{state.personalGoals=JSON.parse(localStorage.getItem('cc_goals'))||[];}catch(e){state.personalGoals=[];}
-    try{state.chargebacks=JSON.parse(localStorage.getItem('cc_cb'))||[];}catch(e){state.chargebacks=[];}
-    // CRM — use seed if empty
-    try{state.crmMembers=JSON.parse(localStorage.getItem(CRM_MK))||[];}catch(e){state.crmMembers=[];}
-    if(!state.crmMembers.length){
-      state.crmMembers=JSON.parse(JSON.stringify(SEED_MEMBERS));
-      try{localStorage.setItem(CRM_MK,JSON.stringify(state.crmMembers));}catch(e){}
-    }
-    try{state.crmAgencies=JSON.parse(localStorage.getItem(CRM_AK))||{};}catch(e){state.crmAgencies={};}
-    if(!Object.keys(state.crmAgencies).length){
-      state.crmAgencies=JSON.parse(JSON.stringify(SEED_AGENCIES));
-      try{localStorage.setItem(CRM_AK,JSON.stringify(state.crmAgencies));}catch(e){}
-    }
-    try{state.crmCounter=parseInt(localStorage.getItem(CRM_CK))||5;}catch(e){state.crmCounter=5;}
-    // Normalize
-    state.crmMembers.forEach(m=>{if(m.zodiac==='cat')m.zodiac='cat';});
-    // Migrate deals
     state.deals.forEach(d=>{
       if(d.referrals===undefined)d.referrals=0;
       if(d.leadType===undefined)d.leadType='';
@@ -93,22 +71,8 @@ const Store = (() => {
     });
   }
 
-  function _savePortalLocal(){
-    try{localStorage.setItem(UK,JSON.stringify(state.users));}catch(e){}
-    try{localStorage.setItem(DK,JSON.stringify(state.deals));}catch(e){}
-    try{localStorage.setItem(SK,JSON.stringify(state.spend));}catch(e){}
-    try{localStorage.setItem(IK,JSON.stringify(state.incentives));}catch(e){}
-    try{localStorage.setItem('cc_mrpts',JSON.stringify(state.monthlyReports));}catch(e){}
-    try{localStorage.setItem(RK,JSON.stringify(state.recruitPosts));}catch(e){}
-    try{localStorage.setItem('cc_goals',JSON.stringify(state.personalGoals));}catch(e){}
-    try{localStorage.setItem('cc_cb',JSON.stringify(state.chargebacks));}catch(e){}
-  }
-  function _saveCRMLocal(){
-    try{localStorage.setItem(CRM_MK,JSON.stringify(state.crmMembers));}catch(e){}
-    try{localStorage.setItem(CRM_AK,JSON.stringify(state.crmAgencies));}catch(e){}
-    try{localStorage.setItem(CRM_CK,String(state.crmCounter));}catch(e){}
-  }
-  function saveLocal(){_savePortalLocal();_saveCRMLocal();}
+  // No localStorage writes — everything goes to Firebase only
+  function saveLocal(){} // no-op kept for compat
 
   // ── FIREBASE PAYLOAD ───────────────────────────────────────────
   function _buildPayload(){
@@ -154,13 +118,13 @@ const Store = (() => {
       if(d.leadSource===undefined)d.leadSource='';
       if(d.eftDate===undefined)d.eftDate='';
     });
-    saveLocal();
+    
     return true;
   }
 
   async function pushToGH(){return GH.push(_buildPayload());}
-  async function saveCRM(){_saveCRMLocal();await pushToGH();}
-  async function saveAll(){pushUndo();saveLocal();await pushToGH();}
+  async function saveCRM(){await pushToGH();}
+  async function saveAll(){pushUndo();await pushToGH();}
 
   // ── UNDO / REDO ────────────────────────────────────────────────
   function _snap(){return{
@@ -176,8 +140,8 @@ const Store = (() => {
   };}
   function pushUndo(){state.undoStack.push(_snap());if(state.undoStack.length>MAX_UNDO)state.undoStack.shift();state.redoStack=[];updateUndoBtns();}
   function _restore(s){state.users=s.users;state.deals=s.deals;state.spend=s.spend;state.incentives=s.incentives;state.monthlyReports=s.monthlyReports||[];state.recruitPosts=s.recruitPosts||[];state.crmMembers=s.crmMembers;state.crmAgencies=s.crmAgencies;state.crmCounter=s.crmCounter;}
-  async function undo(){if(!state.undoStack.length)return false;state.redoStack.push(_snap());_restore(state.undoStack.pop());saveLocal();await pushToGH();updateUndoBtns();return true;}
-  async function redo(){if(!state.redoStack.length)return false;state.undoStack.push(_snap());_restore(state.redoStack.pop());saveLocal();await pushToGH();updateUndoBtns();return true;}
+  async function undo(){if(!state.undoStack.length)return false;state.redoStack.push(_snap());_restore(state.undoStack.pop());await pushToGH();updateUndoBtns();return true;}
+  async function redo(){if(!state.redoStack.length)return false;state.undoStack.push(_snap());_restore(state.redoStack.pop());await pushToGH();updateUndoBtns();return true;}
   function updateUndoBtns(){const u=document.getElementById('undo-btn');const r=document.getElementById('redo-btn');if(u)u.disabled=!state.undoStack.length;if(r)r.disabled=!state.redoStack.length;}
 
   // ── HELPERS ────────────────────────────────────────────────────
