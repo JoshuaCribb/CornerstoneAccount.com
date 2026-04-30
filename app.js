@@ -171,7 +171,18 @@ async function doLogin(){
   document.getElementById('l-err').style.display='none';
   cur=u;_saveSession(u);enterApp();_startActivity();
 }
-function doLogout(){_clearSession();_stopActivity();cur=null;document.getElementById('app').style.display='none';document.getElementById('login-page').style.display='flex';document.getElementById('l-user').value='';document.getElementById('l-pass').value='';}
+function doLogout(){
+  _clearSession();_stopActivity();GH.stopLiveSync();cur=null;
+  // Reset all CSS variables back to default theme
+  const def=THEMES.default;
+  Object.entries(def).forEach(([k,v])=>document.documentElement.style.setProperty(k,v));
+  document.documentElement.style.setProperty('--font-body',"'Georgia',serif");
+  document.body.style.fontFamily="'Georgia',serif";
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-page').style.display='flex';
+  document.getElementById('l-user').value='';
+  document.getElementById('l-pass').value='';
+}
 
 function _setHdrAvatar(u){const av=document.getElementById('hdr-av');if(!av)return;if(u?.avatar){av.innerHTML=`<img src="${u.avatar}" alt="">`;}else{av.textContent=initials(u?.agentName||u?.username||'');}}
 
