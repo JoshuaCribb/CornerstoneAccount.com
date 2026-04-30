@@ -85,22 +85,31 @@ const DB = (() => {
   async function _getDoc() {
     try {
       const r = await fetch(DOC_URL);
-      if (!r.ok) return null;
+      if (!r.ok) {
+        const errText = await r.text().catch(()=>'');
+        console.error('[Firebase] GET failed:', r.status, r.statusText, errText.slice(0,300));
+        return null;
+      }
       return _decodeDoc(await r.json());
-    } catch(e) { return null; }
+    } catch(e) { console.error('[Firebase] GET error:', e); return null; }
   }
 
   async function _updateDoc(data) {
     try {
       const fields = {};
       Object.entries(data).forEach(([k, v]) => { fields[k] = _encode(v); });
+      const body = JSON.stringify({ fields });
       const r = await fetch(DOC_URL, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields })
+        body
       });
+      if (!r.ok) {
+        const errText = await r.text().catch(()=>'');
+        console.error('[Firebase] PATCH failed:', r.status, r.statusText, errText.slice(0,300));
+      }
       return r.ok;
-    } catch(e) { return false; }
+    } catch(e) { console.error('[Firebase] PATCH error:', e); return false; }
   }
 
   async function _createDoc(data) {
@@ -113,7 +122,7 @@ const DB = (() => {
       );
       if (r.status === 409 || !r.ok) return await _updateDoc(data);
       return r.ok;
-    } catch(e) { return false; }
+    } catch(e) { console.error('[Firebase] POST error:', e); return false; }
   }
 
   // ── PULL ──────────────────────────────────────────────────────
