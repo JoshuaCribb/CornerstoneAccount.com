@@ -56,6 +56,7 @@ const Store = (() => {
       if(u.badges===undefined)u.badges=[];
       if(u.wornBadgeId===undefined)u.wornBadgeId=null;
       if(u.wornBadges===undefined)u.wornBadges=['','',''];
+      if(u.prefs===undefined)u.prefs={};
       // Preserve manager role
       if(u.role==='manager')u.role='manager';
 
@@ -142,6 +143,7 @@ const Store = (() => {
       if(u.badges===undefined)u.badges=[];
       if(u.wornBadgeId===undefined)u.wornBadgeId=null;
       if(u.wornBadges===undefined)u.wornBadges=['','',''];
+      if(u.prefs===undefined)u.prefs={};
       // Preserve manager role
       if(u.role==='manager')u.role='manager';
 

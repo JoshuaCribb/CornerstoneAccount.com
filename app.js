@@ -71,11 +71,11 @@ const THEMES = {
     '--b':'rgba(61,142,240,0.18)','--b2':'rgba(61,142,240,0.40)',
     '--t':'#c8dfff','--d':'#2a4a70','--d2':'#5a80aa',
   },
-  silver: {
-    '--p1':'#111114','--p2':'#18181c','--p3':'#1e1e23','--p4':'#242429',
-    '--g':'#b8c4cc','--g2':'#dde4e8','--g3':'#7a8a94','--g4':'rgba(184,196,204,0.10)',
-    '--b':'rgba(184,196,204,0.18)','--b2':'rgba(184,196,204,0.38)',
-    '--t':'#e0e6ea','--d':'#5a6368','--d2':'#8a9298',
+  'silver': {
+    '--p1':'#080b0f','--p2':'#0d1117','--p3':'#121920','--p4':'#172028',
+    '--g':'#e8f4f8','--g2':'#ffffff','--g3':'#7eb8d4','--g4':'rgba(232,244,248,0.08)',
+    '--b':'rgba(232,244,248,0.15)','--b2':'rgba(232,244,248,0.35)',
+    '--t':'#e8f4f8','--d':'#3a5060','--d2':'#8ab4c8',
   },
 };
 
@@ -91,10 +91,17 @@ const FONTS = {
 };
 
 function _getPrefs(userId){
+  // Firebase-synced user record takes priority; fall back to localStorage
+  const u=Store.users.find(x=>x.id===userId);
+  if(u?.prefs&&Object.keys(u.prefs).length)return u.prefs;
   try{return JSON.parse(localStorage.getItem('cc_prefs_'+userId))||{};}catch(e){return{};}
 }
 function _savePrefs(userId, prefs){
-  localStorage.setItem('cc_prefs_'+userId, JSON.stringify(prefs));
+  // Save to localStorage for instant apply
+  localStorage.setItem('cc_prefs_'+userId,JSON.stringify(prefs));
+  // Save to user record so it syncs to Firebase across all devices
+  const u=Store.users.find(x=>x.id===userId);
+  if(u){u.prefs=prefs;Store.saveAll();}
 }
 
 function applyThemeAndFont(userId){
@@ -1027,7 +1034,7 @@ function _renderProfile(u){
       <select id="sett-theme" onchange="saveUserPrefs('${u.id}','theme',this.value)" style="font-family:inherit">
         <option value="default" ${(_getPrefs(u.id).theme||'default')==='default'?'selected':''}>Default — Black & Gold</option>
         <option value="deep-blue" ${_getPrefs(u.id).theme==='deep-blue'?'selected':''}>Deep Blue Glass</option>
-        <option value="silver" ${_getPrefs(u.id).theme==='silver'?'selected':''}>Silver</option>
+        <option value="silver" ${_getPrefs(u.id).theme==='silver'?'selected':''}>Futuristic Silver</option>
       </select>
     </div>
     <div class="fg"><label>Font</label>
