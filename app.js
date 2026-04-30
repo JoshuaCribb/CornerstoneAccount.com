@@ -1101,7 +1101,7 @@ function _renderProfile(u){
         <option value="default" ${(_getPrefs(u.id).theme||'default')==='default'?'selected':''}>Default — Black & Gold</option>
         <option value="deep-blue" ${_getPrefs(u.id).theme==='deep-blue'?'selected':''}>Deep Blue Glass</option>
         <option value="white" ${_getPrefs(u.id).theme==='white'?'selected':''}>White</option>
-        <option value="silver" ${_getPrefs(u.id).theme==='silver'?'selected':''}>Chrome</option>
+        <option value="silver" ${_getPrefs(u.id).theme==='silver'?'selected':''}>Silver</option>
       </select>
     </div>
     <div class="fg"><label>Font</label>
