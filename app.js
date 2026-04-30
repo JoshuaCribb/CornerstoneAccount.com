@@ -72,13 +72,7 @@ const THEMES = {
     '--b':'rgba(123,159,212,0.18)','--b2':'rgba(123,159,212,0.40)',
     '--t':'#d6e4f7','--d':'#1e3060','--d2':'#4a6898',
   },
-  'white': {
-    // White — clean light mode, all text black
-    '--p1':'#f5f5f5','--p2':'#ebebeb','--p3':'#e0e0e0','--p4':'#d5d5d5',
-    '--g':'#1a1a1a','--g2':'#000000','--g3':'#444444','--g4':'rgba(0,0,0,0.06)',
-    '--b':'rgba(0,0,0,0.14)','--b2':'rgba(0,0,0,0.28)',
-    '--t':'#0a0a0a','--d':'#555555','--d2':'#333333',
-  },
+
   'silver': {
     // Chrome — brushed steel light mode, reflective metallic
     '--p1':'#c8d0d8','--p2':'#d8e0e8','--p3':'#e4eaef','--p4':'#eef2f5',
@@ -114,8 +108,8 @@ function applyThemeAndFont(userId){
   const prefs=_getPrefs(userId);
   const theme=THEMES[prefs.theme||'default']||THEMES.default;
   Object.entries(theme).forEach(([k,v])=>document.documentElement.style.setProperty(k,v));
-  const isLight=['white','silver'].includes(prefs.theme||'default');
-  const lightBg={white:'#f5f5f5',silver:'#c8d0d8'}[prefs.theme]||null;
+  const isLight=(prefs.theme||'default')==='silver';
+  const lightBg=prefs.theme==='silver'?'#c8d0d8':null;
   if(isLight){
     document.body.style.background=lightBg;
     document.documentElement.style.setProperty('--bg',lightBg);
@@ -132,7 +126,7 @@ function applyThemeAndFont(userId){
     });
     hdr.querySelectorAll('.btn').forEach(el=>{
       if(isLight){
-        el.style.setProperty('background', prefs.theme==='silver'?'#c8d0d8':'#f0f0f0','important');
+        el.style.setProperty('background','#c8d0d8','important');
         el.style.setProperty('color','#000000','important');
         el.style.setProperty('border-color','rgba(0,0,0,0.2)','important');
       } else {
@@ -142,16 +136,9 @@ function applyThemeAndFont(userId){
       }
     });
   }
-  // Subnav tabs — white text on black subnav bar
-  const snav=document.querySelector('.subnav');
-  if(snav){
-    snav.querySelectorAll('.tab').forEach(el=>{
-      el.style.setProperty('color',isLight?'#ffffff':'','important');
-    });
-    snav.querySelectorAll('.tab.active').forEach(el=>{
-      el.style.setProperty('background',isLight?'rgba(255,255,255,0.15)':'','important');
-    });
-  }
+  // Subnav — use CSS data attribute instead of inline styles
+  // so tab active class still works properly
+  document.body.setAttribute('data-theme', prefs.theme||'default');
   const font=FONTS[prefs.font||'Georgia']||FONTS['Georgia'];
   document.documentElement.style.setProperty('--font-body', font.stack);
   document.body.style.fontFamily=font.stack;
@@ -1100,8 +1087,7 @@ function _renderProfile(u){
       <select id="sett-theme" onchange="saveUserPrefs('${u.id}','theme',this.value)" style="font-family:inherit">
         <option value="default" ${(_getPrefs(u.id).theme||'default')==='default'?'selected':''}>Default — Black & Gold</option>
         <option value="deep-blue" ${_getPrefs(u.id).theme==='deep-blue'?'selected':''}>Deep Blue Glass</option>
-        <option value="white" ${_getPrefs(u.id).theme==='white'?'selected':''}>White</option>
-        <option value="silver" ${_getPrefs(u.id).theme==='silver'?'selected':''}>Silver</option>
+<option value="silver" ${_getPrefs(u.id).theme==='silver'?'selected':''}>Silver</option>
       </select>
     </div>
     <div class="fg"><label>Font</label>
