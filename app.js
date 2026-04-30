@@ -431,7 +431,7 @@ function renderHome(){
     <div class="sc"><div class="sc-label">Today</div><div class="sc-val wh">${fmt$(Store.totalAP(todayD))}</div><div class="sc-sub">${todayD.length} deals</div></div>
     <div class="sc"><div class="sc-label">This Week</div><div class="sc-val wh">${fmt$(Store.totalAP(weekD))}</div><div class="sc-sub">${weekD.length} deals</div></div>
     <div class="sc"><div class="sc-label">This Month</div><div class="sc-val sm">${fmt$(Store.totalAP(monthD))}</div><div class="sc-sub">${monthD.length} deals</div></div>
-    <div class="sc"><div class="sc-label">Active Agents</div><div class="sc-val wh">${Store.getAgentUsers().length}</div></div>`;
+    ${isAdmin()?`<div class="sc"><div class="sc-label">Active Agents</div><div class="sc-val wh">${Store.getAgentUsers().length}</div></div>`:''}`;
   const lbl={'1d':'Today by Hour','7d':'Last 7 Days','30d':'Last 30 Days','90d':'Last 90 Days',month:'Last 12 Months',ytd:'Year to Date',alltime:'All Time'};
   document.getElementById('home-chart-label').textContent='Agency Production — '+(lbl[tf]||tf);
   const{labels,data}=_homeChartConfig(tf);
