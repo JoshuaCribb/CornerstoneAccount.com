@@ -80,11 +80,11 @@ const THEMES = {
     '--t':'#0a0a0a','--d':'#555555','--d2':'#333333',
   },
   'silver': {
-    // Futuristic Silver — chrome light mode, cool metallic greys, black text on chrome
-    '--p1':'#dde4e8','--p2':'#e8ecf0','--p3':'#eff2f4','--p4':'#f4f6f8',
-    '--g':'#1a1a2e','--g2':'#000000','--g3':'#3a4a5a','--g4':'rgba(26,26,46,0.07)',
-    '--b':'rgba(26,26,46,0.14)','--b2':'rgba(26,26,46,0.28)',
-    '--t':'#0d0d1a','--d':'#445566','--d2':'#223344',
+    // Chrome — brushed steel light mode, reflective metallic
+    '--p1':'#c8d0d8','--p2':'#d8e0e8','--p3':'#e4eaef','--p4':'#eef2f5',
+    '--g':'#111111','--g2':'#000000','--g3':'#334455','--g4':'rgba(0,0,0,0.06)',
+    '--b':'rgba(0,0,0,0.12)','--b2':'rgba(0,0,0,0.25)',
+    '--t':'#080808','--d':'#3a4a58','--d2':'#1a2a38',
   },
 };
 
@@ -115,7 +115,7 @@ function applyThemeAndFont(userId){
   const theme=THEMES[prefs.theme||'default']||THEMES.default;
   Object.entries(theme).forEach(([k,v])=>document.documentElement.style.setProperty(k,v));
   const isLight=['white','silver'].includes(prefs.theme||'default');
-  const lightBg={white:'#f5f5f5',silver:'#dde4e8'}[prefs.theme]||null;
+  const lightBg={white:'#f5f5f5',silver:'#c8d0d8'}[prefs.theme]||null;
   if(isLight){
     document.body.style.background=lightBg;
     document.documentElement.style.setProperty('--bg',lightBg);
@@ -123,12 +123,33 @@ function applyThemeAndFont(userId){
     document.body.style.background='';
     document.documentElement.style.setProperty('--bg','#000000');
   }
-  // Header is always black — force gold/white text inside it for light themes
+  // Header always black — force white text + white/silver buttons for light themes
   const hdr=document.querySelector('.app-hdr');
   if(hdr){
     hdr.style.background='#000000';
-    hdr.querySelectorAll('.user-nm,.tab,.btn-ghost,.btn-pri').forEach(el=>{
-      el.style.setProperty('color', isLight?'var(--g)':'','important');
+    hdr.querySelectorAll('.user-nm,.role-badge').forEach(el=>{
+      el.style.setProperty('color',isLight?'#ffffff':'','important');
+    });
+    hdr.querySelectorAll('.btn').forEach(el=>{
+      if(isLight){
+        el.style.setProperty('background', prefs.theme==='silver'?'#c8d0d8':'#f0f0f0','important');
+        el.style.setProperty('color','#000000','important');
+        el.style.setProperty('border-color','rgba(0,0,0,0.2)','important');
+      } else {
+        el.style.removeProperty('background');
+        el.style.removeProperty('color');
+        el.style.removeProperty('border-color');
+      }
+    });
+  }
+  // Subnav tabs — white text on black subnav bar
+  const snav=document.querySelector('.subnav');
+  if(snav){
+    snav.querySelectorAll('.tab').forEach(el=>{
+      el.style.setProperty('color',isLight?'#ffffff':'','important');
+    });
+    snav.querySelectorAll('.tab.active').forEach(el=>{
+      el.style.setProperty('background',isLight?'rgba(255,255,255,0.15)':'','important');
     });
   }
   const font=FONTS[prefs.font||'Georgia']||FONTS['Georgia'];
@@ -1080,7 +1101,7 @@ function _renderProfile(u){
         <option value="default" ${(_getPrefs(u.id).theme||'default')==='default'?'selected':''}>Default — Black & Gold</option>
         <option value="deep-blue" ${_getPrefs(u.id).theme==='deep-blue'?'selected':''}>Deep Blue Glass</option>
         <option value="white" ${_getPrefs(u.id).theme==='white'?'selected':''}>White</option>
-        <option value="silver" ${_getPrefs(u.id).theme==='silver'?'selected':''}>Futuristic Silver</option>
+        <option value="silver" ${_getPrefs(u.id).theme==='silver'?'selected':''}>Chrome</option>
       </select>
     </div>
     <div class="fg"><label>Font</label>
