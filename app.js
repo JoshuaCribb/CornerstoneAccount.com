@@ -152,6 +152,26 @@ async function saveUserPrefs(userId, key, value){
   toast('Appearance saved to your account ✓');
 }
 
+
+function showBadgeReward(inc, badge){
+  // Build goal description
+  const metricLabels={ap:'AP',deals:'Deals Submitted',referrals:'Beneficiary Referrals',
+    allreferrals:'Total Referrals',warmmarket:'Warm Market Closes',days:'Days Active',
+    recruits:'Recruit Posts',downlines:'Downlines'};
+  const metrics=(inc.metrics&&inc.metrics.length)?inc.metrics:[{metric:inc.metric||'ap',goal:inc.goal||0}];
+  const goalDesc=metrics.map(m=>{
+    const isAP=m.metric==='ap';
+    const goalFmt=isAP?fmtFull(m.goal):fmtNum(m.goal);
+    return`${metricLabels[m.metric]||m.metric}: ${goalFmt}`;
+  }).join('<br>');
+
+  document.getElementById('reward-emoji').textContent=badge.emoji||'🏆';
+  document.getElementById('reward-badge-name').textContent=badge.name;
+  document.getElementById('reward-incentive-title').textContent=inc.title||'';
+  document.getElementById('reward-goal-desc').innerHTML=`<strong style="color:var(--g)">Goal Achieved:</strong><br>${goalDesc}${inc.reward?`<br><strong style="color:var(--g)">Reward:</strong> ${inc.reward}`:''}`;
+  openMod('modal-badge-reward');
+}
+
 // ── CONFIRM DIALOG ─────────────────────────────────────────────
 let _confirmResolve=null;
 function showConfirm(title,msg,okLabel='Confirm',danger=true){
@@ -357,11 +377,14 @@ async function _checkBirthdayWarrior(){
   if((u.badges||[]).some(b=>b.birthdayWarrior===true)) return;
   // Award it
   if(!u.badges) u.badges=[];
-  u.badges.push({id:'bw-'+Store.uid(),emoji:'🎂',name:'Birthday Warrior',earnedAt:new Date().toISOString(),birthdayWarrior:true,manual:false});
+  const bwBadge={id:'bw-'+Store.uid(),emoji:'🎂',name:'Birthday Warrior',earnedAt:new Date().toISOString(),birthdayWarrior:true,manual:false};
+  u.badges.push(bwBadge);
   cur.badges=u.badges;
   await Store.saveAll();
-  toast('🎂 Happy Birthday! You earned the Birthday Warrior badge!');
   _updateWornBadge();
+  // Show reward popup
+  const bwInc=Store.incentives.find(x=>x.id==='birthday-warrior')||{title:'Birthday Warrior',emoji:'🎂',reward:'Birthday Warrior Badge',metrics:[{metric:'deals',goal:1}]};
+  showBadgeReward(bwInc, bwBadge);
 }
 
 async function doUndo(){if(await Store.undo()){refresh();toast('Undo');}}
@@ -633,27 +656,39 @@ function renderIncentives(tab){
   if(tabsEl){
     if(isOwner()){
       tabsEl.innerHTML=`
-        <button class="tf-btn ${!tab||tab==='active'?'active':''}" onclick="renderIncentives('active')">Active Incentives</button>
-        <button class="tf-btn ${tab==='hidden'?'active':''}" onclick="renderIncentives('hidden')">Hidden Incentives</button>`;
-    } else {tabsEl.innerHTML='';}
+        <button class="tf-btn ${!tab||tab==='active'?'active':''}" onclick="renderIncentives('active')">Active</button>
+        <button class="tf-btn ${tab==='completed'?'active':''}" onclick="renderIncentives('completed')">Completed</button>
+        <button class="tf-btn ${tab==='hidden'?'active':''}" onclick="renderIncentives('hidden')">Hidden</button>`;
+    } else {
+      // Agents/managers see Active + their own Completed
+      tabsEl.innerHTML=`
+        <button class="tf-btn ${!tab||tab==='active'?'active':''}" onclick="renderIncentives('active')">Active</button>
+        <button class="tf-btn ${tab==='completed'?'active':''}" onclick="renderIncentives('completed')">Completed</button>`;
+    }
   }
-  // Hidden incentives tab (owner only)
   const hiddenBody=document.getElementById('hidden-inc-body');
+  const completedBody=document.getElementById('completed-inc-body');
   const mainBody=document.getElementById('incentives-body');
+  // Hide all bodies first
+  [hiddenBody,completedBody,mainBody].forEach(el=>{if(el)el.style.display='none';});
+
   if(tab==='hidden'&&isOwner()){
-    if(mainBody)mainBody.style.display='none';
     if(hiddenBody){hiddenBody.style.display='';renderHiddenIncentives(hiddenBody);}
     return;
   }
-  if(hiddenBody)hiddenBody.style.display='none';
+  if(tab==='completed'){
+    if(completedBody){completedBody.style.display='';renderCompletedIncentives(completedBody);}
+    return;
+  }
   if(mainBody)mainBody.style.display='';
-  const allInc=Store.incentives.filter(x=>!x.hidden);
+  // Active tab — exclude completed and hidden
+  const allInc=Store.incentives.filter(x=>!x.hidden&&!x.completedByOwner);
   const sorted=[...allInc].sort((a,b)=>new Date(b.startDate||0)-new Date(a.startDate||0));
   if(!sorted.length){document.getElementById('incentives-body').innerHTML=`<div class="empty" style="grid-column:1/-1">No incentives yet.${isOwner()?' Click "+ Add Incentive"':''}</div>`;return;}
   const scopeClasses={agency:'inc-agency',personal:'inc-personal',team:'inc-team'};
   const scopeLabels={agency:'Agency Wide',personal:'Personal',team:'Team'};
   const tfMap={daily:'Daily',weekly:'Weekly',monthly:'Monthly',quarterly:'Quarterly',semiannual:'Semi-Annual',annual:'Annual',lifetime:'Lifetime'};
-  const metricLabels={ap:'AP Goal',deals:'Deals Goal',referrals:'Referrals Goal',warmmarket:'Warm Market Goal',days:'Days Active Goal',recruits:'Recruits Goal'};
+  const metricLabels={ap:'AP Goal',deals:'Deals Goal',referrals:'Referrals Goal',warmmarket:'Warm Market Goal',days:'Days Active Goal',recruits:'Recruit Posts Goal',downlines:'Downlines Goal',allreferrals:'All Referrals Goal'};
   let html='';
   sorted.forEach(inc=>{
     const isActive=(!inc.endDate||inc.endDate>=now)&&(!inc.startDate||inc.startDate<=now);
@@ -685,12 +720,78 @@ function renderIncentives(tab){
       ${inc.desc?`<div style="font-size:10px;color:var(--d);line-height:1.5;margin-top:4px">${inc.desc}</div>`:''}
       ${canRedeem&&!alreadyEarned?`<button class="redeem-btn" onclick="redeemInc('${inc.id}')">&#9650; Redeem ${inc.emoji||'🏆'} Badge</button>`:''}
       ${alreadyEarned?`<div style="font-size:10px;color:#81c784;margin-top:4px">&#10003; Badge earned</div>`:''}
-      ${isOwner()?`<div class="fl" style="margin-top:8px;gap:4px"><button class="btn btn-ghost btn-xs" onclick="moveInc('${inc.id}',-1)" title="Move up">↑</button><button class="btn btn-ghost btn-xs" onclick="moveInc('${inc.id}',1)" title="Move down">↓</button><button class="btn btn-ghost btn-xs" onclick="editInc('${inc.id}')">Edit</button><button class="btn btn-dan btn-xs" onclick="delInc('${inc.id}')">Remove</button></div>`:''}
+      ${isOwner()?`<div class="fl" style="margin-top:8px;gap:4px"><button class="btn btn-ghost btn-xs" onclick="moveInc('${inc.id}',-1)">↑</button><button class="btn btn-ghost btn-xs" onclick="moveInc('${inc.id}',1)">↓</button><button class="btn btn-ghost btn-xs" onclick="editInc('${inc.id}')">Edit</button><button class="btn btn-grn btn-xs" onclick="markIncComplete('${inc.id}')">✓ Complete</button><button class="btn btn-dan btn-xs" onclick="delInc('${inc.id}')">Remove</button></div>`:''}
     </div>`;
   });
   document.getElementById('incentives-body').innerHTML=html;
 }
 
+
+
+function renderCompletedIncentives(container){
+  const scopeClasses={agency:'inc-agency',personal:'inc-personal',team:'inc-team'};
+  const scopeLabels={agency:'Agency Wide',personal:'Personal',team:'Team'};
+
+  if(isOwner()){
+    // Owner sees all owner-marked completed incentives
+    const ownerCompleted=Store.incentives.filter(x=>x.completedByOwner&&!x.hidden);
+    if(!ownerCompleted.length){container.innerHTML='<div class="empty" style="grid-column:1/-1">No incentives marked complete yet.</div>';return;}
+    let html='<div class="incentives-grid">';
+    ownerCompleted.forEach(inc=>{
+      const scope=inc.scope||'agency';
+      html+=`<div class="inc-card" style="opacity:0.85">
+        <div class="inc-emoji">${inc.emoji||'🏆'}</div>
+        <div class="fl" style="gap:5px;flex-wrap:wrap">
+          <span class="inc-type-tag ${scopeClasses[scope]||'inc-agency'}">${scopeLabels[scope]}</span>
+          <span class="inc-type-tag badge-grey" style="background:var(--gdim);color:#81c784;border-color:rgba(39,174,96,.25)">COMPLETED</span>
+        </div>
+        <div class="inc-title">${inc.title}</div>
+        <div class="inc-reward">&#127942; ${inc.reward}</div>
+        ${inc.completedAt?`<div style="font-size:10px;color:var(--d);margin-top:4px">Completed ${fmtDate(inc.completedAt.split('T')[0])}</div>`:''}
+        <div class="fl" style="margin-top:8px;gap:4px">
+          <button class="btn btn-ghost btn-xs" onclick="unmarkIncComplete('${inc.id}')">↩ Restore</button>
+          <button class="btn btn-dan btn-xs" onclick="delInc('${inc.id}')">Remove</button>
+        </div>
+      </div>`;
+    });
+    container.innerHTML=html+'</div>';
+  } else {
+    // Agents/managers see incentives they personally completed (badge earned)
+    const myBadgeIncIds=(cur.badges||[]).filter(b=>b.incId).map(b=>b.incId);
+    const myCompleted=Store.incentives.filter(x=>!x.hidden&&myBadgeIncIds.includes(x.id));
+    if(!myCompleted.length){container.innerHTML='<div class="empty" style="grid-column:1/-1">No completed incentives yet. Redeem badges from the Active tab to see them here.</div>';return;}
+    let html='<div class="incentives-grid">';
+    myCompleted.forEach(inc=>{
+      const scope=inc.scope||'agency';
+      const myBadge=(cur.badges||[]).find(b=>b.incId===inc.id);
+      html+=`<div class="inc-card" style="opacity:0.9">
+        <div class="inc-emoji">${inc.emoji||'🏆'}</div>
+        <div class="fl" style="gap:5px;flex-wrap:wrap">
+          <span class="inc-type-tag ${scopeClasses[scope]||'inc-agency'}">${scopeLabels[scope]}</span>
+          <span class="inc-type-tag badge-grn">&#10003; EARNED</span>
+        </div>
+        <div class="inc-title">${inc.title}</div>
+        <div class="inc-reward">&#127942; ${inc.reward}</div>
+        ${myBadge?.earnedAt?`<div style="font-size:10px;color:var(--d);margin-top:4px">Earned ${fmtDate(myBadge.earnedAt.split('T')[0])}</div>`:''}
+      </div>`;
+    });
+    container.innerHTML=html+'</div>';
+  }
+}
+
+async function markIncComplete(id){
+  const ok=await showConfirm('Mark Complete','This will hide the incentive from all agents and move it to your Completed tab.','Mark Complete',false);
+  if(!ok)return;
+  const inc=Store.incentives.find(x=>x.id===id);if(!inc)return;
+  inc.completedByOwner=true;inc.completedAt=new Date().toISOString();
+  await Store.saveAll();renderIncentives('completed');toast('Incentive marked complete');
+}
+
+async function unmarkIncComplete(id){
+  const inc=Store.incentives.find(x=>x.id===id);if(!inc)return;
+  inc.completedByOwner=false;delete inc.completedAt;
+  await Store.saveAll();renderIncentives('active');toast('Incentive restored to Active');
+}
 
 function renderHiddenIncentives(container){
   const hidden=Store.incentives.filter(x=>x.hidden);
@@ -740,7 +841,8 @@ async function redeemInc(incId){
   if(u.badges.some(b=>b.incId===incId)){toast('Already earned');return;}
   const badge={id:Store.uid(),incId,emoji:inc.emoji||'🏆',name:inc.badgeTitle||inc.title,earnedAt:new Date().toISOString(),manual:false};
   u.badges.push(badge);cur.badges=u.badges;
-  await Store.saveAll();renderIncentives();toast(`${inc.emoji||'🏆'} Badge earned: ${inc.badgeTitle||inc.title}!`);
+  await Store.saveAll();renderIncentives();
+  showBadgeReward(inc, badge);
 }
 
 function openAddInc(){
@@ -775,7 +877,8 @@ const METRIC_OPTIONS=`
   <option value="allreferrals">Referrals — All (beneficiary + warm market)</option>
   <option value="warmmarket">Warm Market Closes</option>
   <option value="days">Days Posted a Deal</option>
-  <option value="recruits">Recruits Added</option>`;
+  <option value="recruits">Recruit Posts</option>
+  <option value="downlines">Downlines (hierarchy members)</option>`;
 
 function _metricRowHtml(m,g,idx){
   return`<div class="inc-metric-row" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;background:var(--p2);border:1px solid var(--b);border-radius:7px;padding:8px 10px">

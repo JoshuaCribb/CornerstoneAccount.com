@@ -63,6 +63,7 @@ const Store = (() => {
       if(u.prefs===undefined)u.prefs={};
       if(u.id==='u_elite'||u.username==='founders')u.active=false;
     });
+    state.incentives.forEach(i=>{if(i.completedByOwner===undefined)i.completedByOwner=false;});
     state.deals.forEach(d=>{
       if(d.referrals===undefined)d.referrals=0;
       if(d.leadType===undefined)d.leadType='';
@@ -112,6 +113,7 @@ const Store = (() => {
       if(u.role==='manager')u.role='manager';
 
     });
+    state.incentives.forEach(i=>{if(i.completedByOwner===undefined)i.completedByOwner=false;});
     state.deals.forEach(d=>{
       if(d.referrals===undefined)d.referrals=0;
       if(d.leadType===undefined)d.leadType='';
@@ -215,6 +217,11 @@ const Store = (() => {
     if(metric==='recruits'){
       const rPosts=filterByTF(state.recruitPosts.filter(p=>scope==='personal'?p.agentId===agentId:true),'custom','date',inc.startDate||null,inc.endDate||null);
       return rPosts.length;
+    }
+    if(metric==='downlines'){
+      // Count CRM downline members under this agent
+      if(!agentId)return 0;
+      return getDownlineIds(agentId).length;
     }
     return 0;
   }

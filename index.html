@@ -9,12 +9,12 @@
 <meta name="apple-mobile-web-app-title" content="Cornerstone">
 <meta name="theme-color" content="#000000">
 <link rel="apple-touch-icon" href="assets/icon.png">
-<link rel="manifest" href="manifest.json?v=1777542064">
+<link rel="manifest" href="manifest.json?v=1777543612">
 <title>Cornerstone Council</title>
-<link rel="stylesheet" href="style.css?v=1777542064">
+<link rel="stylesheet" href="style.css?v=1777543612">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="firebase.js?v=1777542064"></script>
-<script src="data.js?v=1777542064"></script>
+<script src="firebase.js?v=1777543612"></script>
+<script src="data.js?v=1777543612"></script>
 </head>
 <body>
 
@@ -193,6 +193,7 @@
         </div>
         <div id="inc-tabs" style="display:flex;gap:4px;margin-bottom:12px"></div>
         <div class="incentives-grid" id="incentives-body"></div>
+        <div id="completed-inc-body" style="display:none"></div>
         <div id="hidden-inc-body" style="display:none"></div>
       </div>
 
@@ -520,6 +521,19 @@
 
 <!-- SETTINGS MODAL (in profile) - handled inline -->
 
+
+<!-- BADGE REWARD POPUP -->
+<div class="modal-ov" id="modal-badge-reward" style="z-index:600">
+  <div class="modal" style="text-align:center;max-width:420px">
+    <div id="reward-emoji" style="font-size:64px;margin-bottom:12px;line-height:1"></div>
+    <div id="reward-badge-name" style="font-size:22px;font-weight:700;color:var(--g);margin-bottom:6px"></div>
+    <div id="reward-incentive-title" style="font-size:13px;color:var(--d2);margin-bottom:16px"></div>
+    <div id="reward-goal-desc" style="background:var(--g4);border:1px solid var(--b);border-radius:8px;padding:12px;font-size:12px;color:var(--d2);line-height:1.7;margin-bottom:20px"></div>
+    <div style="font-size:11px;color:var(--d);margin-bottom:16px">This badge has been added to your profile.</div>
+    <button class="btn btn-pri btn-full" onclick="closeMod('modal-badge-reward')" style="font-size:14px;padding:12px">&#10003; Claim Badge</button>
+  </div>
+</div>
+
 <!-- FIREBASE INFO -->
 <div class="modal-ov" id="modal-gh">
   <div class="modal">
@@ -533,6 +547,6 @@
 <div class="toast" id="toast"></div>
 <div class="sync-ind" id="sync-ind">&#8593; Saving...</div>
 
-<script src="app.js?v=1777542064"></script>
+<script src="app.js?v=1777543612"></script>
 </body>
 </html>
