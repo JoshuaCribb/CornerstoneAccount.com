@@ -80,11 +80,11 @@ const THEMES = {
     '--t':'#0a0a0a','--d':'#555555','--d2':'#333333',
   },
   'silver': {
-    // Futuristic Silver — cold chrome, near-black with electric steel highlights
-    '--p1':'#060809','--p2':'#0a0e10','--p3':'#0e1318','--p4':'#12181f',
-    '--g':'#c8dde8','--g2':'#eaf4ff','--g3':'#6a9ab0','--g4':'rgba(200,221,232,0.08)',
-    '--b':'rgba(200,221,232,0.14)','--b2':'rgba(200,221,232,0.32)',
-    '--t':'#ddeeff','--d':'#2a3a44','--d2':'#6a8898',
+    // Futuristic Silver — chrome light mode, cool metallic greys, black text on chrome
+    '--p1':'#dde4e8','--p2':'#e8ecf0','--p3':'#eff2f4','--p4':'#f4f6f8',
+    '--g':'#1a1a2e','--g2':'#000000','--g3':'#3a4a5a','--g4':'rgba(26,26,46,0.07)',
+    '--b':'rgba(26,26,46,0.14)','--b2':'rgba(26,26,46,0.28)',
+    '--t':'#0d0d1a','--d':'#445566','--d2':'#223344',
   },
 };
 
@@ -112,25 +112,28 @@ async function _savePrefs(userId, prefs){
 
 function applyThemeAndFont(userId){
   const prefs=_getPrefs(userId);
-  // Apply theme — never touch header bg (always black)
   const theme=THEMES[prefs.theme||'default']||THEMES.default;
   Object.entries(theme).forEach(([k,v])=>document.documentElement.style.setProperty(k,v));
-  // White theme needs body bg set directly
-  if((prefs.theme||'default')==='white'){
-    document.body.style.background='#f5f5f5';
-    document.documentElement.style.setProperty('--bg','#f5f5f5');
+  const isLight=['white','silver'].includes(prefs.theme||'default');
+  const lightBg={white:'#f5f5f5',silver:'#dde4e8'}[prefs.theme]||null;
+  if(isLight){
+    document.body.style.background=lightBg;
+    document.documentElement.style.setProperty('--bg',lightBg);
   } else {
     document.body.style.background='';
     document.documentElement.style.setProperty('--bg','#000000');
-  document.body.style.background='';
   }
-  // Apply font — does NOT change size
+  // Header is always black — force gold/white text inside it for light themes
+  const hdr=document.querySelector('.app-hdr');
+  if(hdr){
+    hdr.style.background='#000000';
+    hdr.querySelectorAll('.user-nm,.tab,.btn-ghost,.btn-pri').forEach(el=>{
+      el.style.setProperty('color', isLight?'var(--g)':'','important');
+    });
+  }
   const font=FONTS[prefs.font||'Georgia']||FONTS['Georgia'];
   document.documentElement.style.setProperty('--font-body', font.stack);
   document.body.style.fontFamily=font.stack;
-  // Header always black regardless of theme
-  document.documentElement.style.setProperty('--bg','#000000');
-  document.body.style.background='';
 }
 
 async function saveUserPrefs(userId, key, value){
@@ -1064,7 +1067,7 @@ function _renderProfile(u){
         ${Object.entries(FONTS).map(([key,f])=>`<option value="${key}" style="font-family:${f.stack}" ${(_getPrefs(u.id).font||'Georgia')===key?'selected':''}>${f.label}</option>`).join('')}
       </select>
     </div>
-    <div class="info-box" style="margin-top:8px">Font and color are saved to your account in Firebase — they follow you across all devices. Header background is always black.</div>
+    <div class="info-box" style="margin-top:8px">Font and color are saved to your account in the database — they follow you across all devices. Header background is always black.</div>
   </div>
   <div id="pt-edit" style="display:none">
     <div class="fg"><label>Bio</label><textarea id="prof-bio" rows="4" placeholder="Write a short bio...">${u.bio||''}</textarea></div>

@@ -288,6 +288,12 @@ body{overscroll-behavior:none;-webkit-overflow-scrolling:touch}
 .persist-pie{position:relative;width:90px;height:90px;margin:10px auto}
 .persist-pie svg{transform:rotate(-90deg)}
 
+/* ── WHITE THEME OVERRIDES ───────────────────────────────── */
+/* Subnav sits on black border but uses --t for text — stays fine */
+/* Login page on white theme — text stays white since bg is always black */
+.app-hdr{background:#000000!important}
+.subnav{background:#000000!important}
+
 /* ── TOAST & SYNC ─────────────────────────── */
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--p1);border:1px solid var(--b2);border-radius:8px;padding:9px 18px;font-size:12px;font-weight:700;color:var(--g);z-index:9999;display:none;white-space:nowrap;font-family:var(--font-body,'Georgia',serif);pointer-events:none}
 .toast.show{display:block;animation:fadeUp .25s}
