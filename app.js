@@ -29,7 +29,7 @@ function tfLabel(tf){return{today:'Today',week:'Week',month:'Month',ytd:'YTD',al
 
 function toast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200);}
 function openMod(id){const el=document.getElementById(id);if(el)el.classList.add('open');}
-function closeMod(id){const el=document.getElementById(id);if(el)el.classList.remove('open');}
+function closeMod(id){const el=document.getElementById(id);if(el){el.classList.remove('open');el.style.display='';}}
 
 
 // Returns worn badge emoji + birthday cake if applicable for an agentId
@@ -96,15 +96,19 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 // ── AUTH ───────────────────────────────────────────────────────
-function doLogin(){
-  Store.loadLocal();
+async function doLogin(){
   const un=document.getElementById('l-user').value.trim();
   const pw=document.getElementById('l-pass').value;
+  const btn=document.querySelector('#login-page .btn-pri');
+  if(btn){btn.disabled=true;btn.textContent='Connecting...';}
+  // Pull from Firebase FIRST so new accounts registered on other devices are visible
+  Store.loadLocal();
+  await Store.syncFromGH();
   const u=Store.users.find(u=>u.username.toLowerCase()===un.toLowerCase()&&u.pwd===pw&&u.active!==false);
+  if(btn){btn.disabled=false;btn.textContent='Sign In →';}
   if(!u){document.getElementById('l-err').style.display='block';return;}
   document.getElementById('l-err').style.display='none';
   cur=u;_saveSession(u);enterApp();_startActivity();
-  Store.syncFromGH().then(ok=>{if(ok){refresh();toast('Synced from Firebase');}});
 }
 function doLogout(){_clearSession();_stopActivity();cur=null;document.getElementById('app').style.display='none';document.getElementById('login-page').style.display='flex';document.getElementById('l-user').value='';document.getElementById('l-pass').value='';}
 
@@ -130,8 +134,14 @@ function enterApp(){
   document.getElementById('hdr-nm').textContent=(cur.agentName||cur.username).split(' ')[0];
   const rb=document.getElementById('hdr-role');
   // Auto-promote to manager if they have CRM downlines (regardless of portal accounts)
+  // Manager = agent with any CRM downlines (registered or not)
   const hasDownlines=cur.agentId&&Store.getDownlineIds(cur.agentId).length>0;
   const effRole=(!['admin','owner'].includes(cur.role)&&hasDownlines)?'manager':cur.role;
+  // Persist manager role to user record for display
+  if(effRole==='manager'&&cur.role==='agent'){
+    const uRec=Store.users.find(x=>x.id===cur.id);
+    if(uRec&&uRec.role==='agent'){uRec.role='manager';cur.role='manager';Store.saveAll();}
+  }
   const rl={owner:'Owner',admin:'Admin',manager:'Manager',agent:'Agent'};
   rb.textContent=(rl[effRole]||effRole).toUpperCase();
   rb.className='role-badge rb-'+(cur.role==='owner'?'owner':cur.role==='admin'?'admin':effRole==='manager'?'manager':'agent');
@@ -295,6 +305,8 @@ function renderHome(){
   const ctx=document.getElementById('chart-home').getContext('2d');
   if(charts.home)charts.home.destroy();
   charts.home=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'AP',data,fill:true,borderColor:'#c9a84c',backgroundColor:'rgba(201,168,76,0.07)',tension:0.4,pointBackgroundColor:'#c9a84c',pointRadius:3,pointHoverRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'AP: '+fmtFull(c.raw)}}},scales:{x:{grid:{color:'rgba(201,168,76,0.05)'},ticks:{color:'#6a6050',font:{size:10,family:'Georgia,serif'}}},y:{grid:{color:'rgba(201,168,76,0.05)'},ticks:{color:'#6a6050',font:{size:10,family:'Georgia,serif'},callback:v=>fmt$(v)}}}}});
+  // Post Deal hero — hidden for owner
+  const postHero=document.querySelector('.post-hero');if(postHero)postHero.style.display=isOwner()?'none':'';
   const allDeals=[...Store.deals].sort((a,b)=>new Date(b.date)-new Date(a.date));
   document.getElementById('home-deals').innerHTML=allDeals.length?allDeals.map(d=>dealRowHtml(d,true)).join(''):'<div class="empty">No deals yet.</div>';
 }
@@ -391,7 +403,8 @@ function renderTeams(){
   const myDownIds=cur.agentId?Store.getDownlineIds(cur.agentId):[];
   // Only show agents who have at least one downline with a portal account
   const teamsOnly=teamData.filter(td=>td.downUsers.length>0);
-  const viewable=isAdmin()?teamsOnly:teamsOnly.filter(td=>td.u.agentId===cur.agentId||myDownIds.includes(td.u.agentId));
+  // All agents can view all teams
+  const viewable=teamsOnly;
   viewable.forEach(({u,personalAP,teamAP,downUsers,myD,downD})=>{
     const m=Store.getMember(u.agentId);const avImg=u.avatar?`<img src="${u.avatar}" alt="">`:initials(u.agentName);
     const allTeamDeals=[...myD,...downD].sort((a,b)=>new Date(b.date)-new Date(a.date));
@@ -539,7 +552,7 @@ function renderIncentives(tab){
       ${inc.desc?`<div style="font-size:10px;color:var(--d);line-height:1.5;margin-top:4px">${inc.desc}</div>`:''}
       ${canRedeem&&!alreadyEarned?`<button class="redeem-btn" onclick="redeemInc('${inc.id}')">&#9650; Redeem ${inc.emoji||'🏆'} Badge</button>`:''}
       ${alreadyEarned?`<div style="font-size:10px;color:#81c784;margin-top:4px">&#10003; Badge earned</div>`:''}
-      ${isOwner()?`<div class="fl" style="margin-top:8px"><button class="btn btn-ghost btn-xs" onclick="editInc('${inc.id}')">Edit</button><button class="btn btn-dan btn-xs" onclick="delInc('${inc.id}')">Remove</button></div>`:''}
+      ${isOwner()?`<div class="fl" style="margin-top:8px;gap:4px"><button class="btn btn-ghost btn-xs" onclick="moveInc('${inc.id}',-1)" title="Move up">↑</button><button class="btn btn-ghost btn-xs" onclick="moveInc('${inc.id}',1)" title="Move down">↓</button><button class="btn btn-ghost btn-xs" onclick="editInc('${inc.id}')">Edit</button><button class="btn btn-dan btn-xs" onclick="delInc('${inc.id}')">Remove</button></div>`:''}
     </div>`;
   });
   document.getElementById('incentives-body').innerHTML=html;
@@ -571,6 +584,19 @@ function renderHiddenIncentives(container){
   });
   html+='</div>';
   container.innerHTML=html;
+}
+
+
+function moveInc(id, dir){
+  const idx=Store.incentives.findIndex(x=>x.id===id);
+  if(idx<0)return;
+  const newIdx=idx+dir;
+  if(newIdx<0||newIdx>=Store.incentives.length)return;
+  const tmp=Store.incentives[idx];
+  Store.incentives[idx]=Store.incentives[newIdx];
+  Store.incentives[newIdx]=tmp;
+  Store.saveAll();
+  renderIncentives();
 }
 
 async function redeemInc(incId){
@@ -659,7 +685,7 @@ async function saveInc(){
   const isHidden=_hidCb?_hidCb.checked:false;
   const obj={id:id||Store.uid(),title:document.getElementById('inc-title').value.trim(),timeframe:document.getElementById('inc-tf').value,scope:document.getElementById('inc-scope').value,metrics,metric:metrics[0].metric,goal:metrics[0].goal,startDate:document.getElementById('inc-start').value,endDate:document.getElementById('inc-end').value,reward:document.getElementById('inc-reward').value.trim(),desc:document.getElementById('inc-desc').value.trim(),emoji:document.getElementById('inc-emoji').value.trim(),badgeTitle:document.getElementById('inc-badge-title').value.trim(),hidden:isHidden,createdAt:new Date().toISOString()};
   if(!obj.title){toast('Title required');return;}
-  if(id){const idx=Store.incentives.findIndex(x=>x.id===id);if(idx>-1)Store.incentives.splice(idx,1,{...Store.incentives[idx],...obj});}
+  if(id){const idx=Store.incentives.findIndex(x=>x.id===id);if(idx>-1){const existing=Store.incentives[idx];Store.incentives.splice(idx,1,{...existing,...obj,order:existing.order||idx});}}
   else Store.incentives.push(obj);
   await Store.saveAll();closeMod('modal-inc');renderIncentives(isHidden?'hidden':'active');toast('Incentive saved');
 }
@@ -839,18 +865,32 @@ function downloadMonthlyReport(monthKey){
 let _profileAgentId=null,_profileUserId=null;
 function openProfile(agentId,e,fallbackUserId){
   if(e&&e.stopPropagation)e.stopPropagation();
+  if(e&&e.preventDefault)e.preventDefault();
   Store.loadLocal();
   _profileAgentId=agentId||null;
   let u=null;
-  if(agentId&&agentId!=='null'&&agentId!=='undefined'){
+  if(agentId&&agentId!=='null'&&agentId!=='undefined'&&agentId!==''){
     u=Store.users.find(x=>x.agentId===agentId);
   }
-  if(!u&&fallbackUserId&&fallbackUserId!=='null'&&fallbackUserId!=='undefined'){
+  if(!u&&fallbackUserId&&fallbackUserId!=='null'&&fallbackUserId!=='undefined'&&fallbackUserId!==''){
     u=Store.users.find(x=>x.id===fallbackUserId);
   }
   _profileUserId=u?.id||null;
-  if(!u){toast('Profile not found');return;}
-  _renderProfile(u);openMod('modal-profile');
+  if(!u){
+    console.warn('[Profile] Not found — agentId:',agentId,'fallback:',fallbackUserId,'users:',Store.users.length);
+    toast('Profile not found');
+    return;
+  }
+  try {
+    _renderProfile(u);
+    const modal=document.getElementById('modal-profile');
+    if(!modal){console.error('[Profile] Modal element missing');toast('Cannot open profile');return;}
+    modal.classList.add('open');
+    modal.style.display='flex'; // force display in case CSS conflict
+  } catch(err) {
+    console.error('[Profile] Render error:',err);
+    toast('Error opening profile — check console');
+  }
 }
 function openOwnProfile(){if(cur)openProfile(cur.agentId,null,cur.id);}
 

@@ -69,8 +69,8 @@ html,body{height:100%;background:#000000;color:var(--t);font-family:'Georgia',se
 .worn-badge-icon:hover .badge-tooltip{display:block}
 
 /* ── CONTENT ─────────────────────────────── */
-.content-area{flex:1;overflow:hidden;display:flex}
-.view-wrap{flex:1;overflow-y:auto;padding:20px;height:100%}
+.content-area{flex:1;overflow:hidden;overflow-x:hidden;display:flex;max-width:100vw}
+.view-wrap{flex:1;overflow-y:auto;overflow-x:hidden;padding:20px;height:100%}
 .view{display:none;height:100%}.view.active{display:block}
 
 /* ── STAT CARDS ─────────────────────────────── */
@@ -199,6 +199,7 @@ html,body{height:100%;background:#000000;color:var(--t);font-family:'Georgia',se
 .team-deals-section{margin-top:12px;padding-top:12px;border-top:1px solid var(--b)}
 
 /* ── CONSISTENCY ─────────────────────────────── */
+.heatmap-wrap{overflow-x:hidden;width:100%}
 .streak-pill{background:var(--g4);border:1px solid var(--b);border-radius:20px;padding:4px 12px;display:inline-flex;align-items:center;gap:5px;font-size:11px;margin-right:6px;margin-bottom:6px}
 
 /* ── INCENTIVES GRID ─────────────────────────── */
@@ -307,11 +308,12 @@ body{overscroll-behavior:none;-webkit-overflow-scrolling:touch}
   .user-nm{display:none}
   .role-badge{display:none}
   .worn-badge-icon{display:none}
-  .subnav{padding:5px 10px;top:44px}
+  .subnav{padding:5px 10px;top:44px;position:sticky;z-index:90}
   .tab{font-size:10px;padding:4px 8px}
   .fr2,.fr3{grid-template-columns:1fr}
   .incentives-grid{grid-template-columns:1fr}
   .heatmap-grid{grid-template-columns:repeat(26,1fr)}
+  .view-wrap{overflow-x:hidden}
   .modal{padding:16px;max-width:100%}
   .modal-profile{max-width:100%}
   .profile-hero{flex-direction:column;align-items:flex-start}

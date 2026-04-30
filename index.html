@@ -155,18 +155,12 @@
       <div class="view" id="view-teams">
         <div class="flsb" style="margin-bottom:14px">
           <div><div style="font-size:20px;font-weight:700;color:var(--g)">Teams</div></div>
-          <div>
-            <div class="tf-bar">
+          <div class="tf-bar">
               <button class="tf-btn" onclick="setTF('teams','today',this)">Today</button>
               <button class="tf-btn" onclick="setTF('teams','week',this)">Week</button>
               <button class="tf-btn active" onclick="setTF('teams','month',this)">Month</button>
               <button class="tf-btn" onclick="setTF('teams','ytd',this)">YTD</button>
-              <button class="tf-btn" onclick="setTF('teams','alltime',this)">All Time</button>
-              <button class="tf-btn" onclick="setTF('teams','custom',this)">Custom</button>
             </div>
-            <div class="tf-custom" id="teams-custom"><input type="date" id="teams-cs" onchange="renderTeams()"><span style="color:var(--d)">to</span><input type="date" id="teams-ce" onchange="renderTeams()"></div>
-          </div>
-          <div class="info-box" style="font-size:10px;margin-top:8px">Default view: <strong>Monthly</strong> — change with buttons above</div>
         </div>
         <div id="teams-body"></div>
       </div>
@@ -395,6 +389,7 @@
           <option value="daily">Daily</option>
           <option value="weekly">Weekly</option>
           <option value="monthly" selected>Monthly</option>
+          <option value="bimonthly">Every 2 Months</option>
           <option value="quarterly">Quarterly</option>
           <option value="semiannual">Semi-Annual</option>
           <option value="annual">Annual</option>

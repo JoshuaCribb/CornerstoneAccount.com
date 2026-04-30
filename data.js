@@ -56,6 +56,8 @@ const Store = (() => {
       if(u.badges===undefined)u.badges=[];
       if(u.wornBadgeId===undefined)u.wornBadgeId=null;
       if(u.wornBadges===undefined)u.wornBadges=['','',''];
+      // Preserve manager role
+      if(u.role==='manager')u.role='manager';
 
       // remove founders
       if(u.id==='u_elite'||u.username==='founders')u.active=false;
@@ -80,7 +82,7 @@ const Store = (() => {
     }
     try{state.crmCounter=parseInt(localStorage.getItem(CRM_CK))||5;}catch(e){state.crmCounter=5;}
     // Normalize
-    state.crmMembers.forEach(m=>{if(m.zodiac==='rabbit')m.zodiac='cat';});
+    state.crmMembers.forEach(m=>{if(m.zodiac==='cat')m.zodiac='cat';});
     // Migrate deals
     state.deals.forEach(d=>{
       if(d.referrals===undefined)d.referrals=0;
@@ -135,11 +137,13 @@ const Store = (() => {
     if(remote.crmAgencies&&Object.keys(remote.crmAgencies).length)state.crmAgencies=remote.crmAgencies;
     if(remote.crmCounter!==undefined)state.crmCounter=remote.crmCounter;
     DEF_USERS.forEach(du=>{if(!state.users.find(u=>u.id===du.id))state.users.push({...du});});
-    state.crmMembers.forEach(m=>{if(m.zodiac==='rabbit')m.zodiac='cat';});
+    state.crmMembers.forEach(m=>{if(m.zodiac==='cat')m.zodiac='cat';});
     state.users.forEach(u=>{
       if(u.badges===undefined)u.badges=[];
       if(u.wornBadgeId===undefined)u.wornBadgeId=null;
       if(u.wornBadges===undefined)u.wornBadges=['','',''];
+      // Preserve manager role
+      if(u.role==='manager')u.role='manager';
 
     });
     state.deals.forEach(d=>{
@@ -199,6 +203,7 @@ const Store = (() => {
       case'week':{const dw=now.getDay();s=new Date(now.getFullYear(),now.getMonth(),now.getDate()-(dw===0?6:dw-1));break;}
       case'month':s=new Date(now.getFullYear(),now.getMonth(),1);break;
       case'ytd':s=new Date(now.getFullYear(),0,1);break;
+      case'bimonthly':s=new Date(now.getFullYear(),now.getMonth()-1,1);break;
       case'q1':s=new Date(now.getFullYear(),0,1);e=new Date(now.getFullYear(),2,31,23,59,59);break;
       case'q2':s=new Date(now.getFullYear(),3,1);e=new Date(now.getFullYear(),5,30,23,59,59);break;
       case'q3':s=new Date(now.getFullYear(),6,1);e=new Date(now.getFullYear(),8,30,23,59,59);break;
